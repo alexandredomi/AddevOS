@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assistência Técnica - OS</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/img/logo.png" alt="AD.Dev" class="logo">
+      </div>
+    </header>
+
+    <main>
+      <!-- Lista de OS -->
+      <section id="listView" class="screen active">
+        <div class="toolbar">
+          <div class="search">
+            <input type="search" id="searchInput" placeholder="Buscar por cliente ou aparelho" aria-label="Buscar">
+          </div>
+          <div class="filter-group" role="group" aria-label="Filtrar por status">
+            <button class="filter-btn active" data-status="">Todos</button>
+            <button class="filter-btn" data-status="Aguardando">Aguardando</button>
+            <button class="filter-btn" data-status="Em andamento">Em andamento</button>
+            <button class="filter-btn" data-status="Finalizado">Finalizado</button>
+          </div>
+        </div>
+        <h2 class="section-title">Lista de OS</h2>
+        <div id="ordersList" class="cards"></div>
+      </section>
+
+      <!-- Formulário Nova/Editar OS -->
+      <section id="formView" class="screen">
+        <header class="section-header">
+          <h2 id="formTitle">Nova OS</h2>
+          <button id="closeForm" class="ghost-btn">✕</button>
+        </header>
+        <form id="orderForm" autocomplete="off">
+          <div class="form-grid">
+            <label>Nome do cliente:
+              <input type="text" id="customerName" required>
+            </label>
+            <label>Número de telefone:
+              <input type="tel" id="phone">
+            </label>
+            <label>Modelo do aparelho:
+              <input type="text" id="device" required>
+            </label>
+            <label>Defeito Relatado:
+              <textarea id="issue" rows="2" required></textarea>
+            </label>
+            <label>Valor (R$):
+              <input type="text" id="price" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+            </label>
+            <label>Custo (R$):
+              <input type="text" id="cost" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+            </label>
+            <label>Observações:
+              <textarea id="notes" rows="2"></textarea>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>
+            <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
+            <button type="submit" class="primary-btn">Salvar</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Detalhe da OS -->
+      <section id="detailView" class="screen">
+        <header class="section-header">
+          <h2>Detalhes da OS</h2>
+          <button id="closeDetail" class="ghost-btn">✕</button>
+        </header>
+        <div id="detailContent" class="detail-card"></div>
+      </section>
+
+      <!-- Financeiro -->
+      <section id="financeView" class="screen">
+        <header class="section-header">
+          <h2>Financeiro</h2>
+          <button id="closeFinance" class="ghost-btn">✕</button>
+        </header>
+        <div class="finance-grid">
+          <div class="stat">
+            <p>Hoje</p>
+            <strong id="totalDay">R$ 0,00</strong>
+            <small id="costDay" class="muted">Custo: R$ 0,00</small>
+            <small id="profitDay" class="muted">Lucro: R$ 0,00</small>
+          </div>
+          <div class="stat">
+            <p>Mês</p>
+            <strong id="totalMonth">R$ 0,00</strong>
+            <small id="costMonth" class="muted">Custo: R$ 0,00</small>
+            <small id="profitMonth" class="muted">Lucro: R$ 0,00</small>
+          </div>
+          <div class="stat">
+            <p>Total recebido</p>
+            <strong id="totalAll">R$ 0,00</strong>
+            <small id="costAll" class="muted">Custo: R$ 0,00</small>
+            <small id="profitAll" class="muted">Lucro: R$ 0,00</small>
+          </div>
+        </div>
+        <h2>Serviços finalizados</h2>
+        <div id="financeList" class="cards compact"></div>
+      </section>
+
+      <!-- Configurações -->
+      <section id="settingsView" class="screen">
+        <header class="section-header">
+          <h2>Configurações</h2>
+          <button data-target="listView" class="ghost-btn close-settings">✕</button>
+        </header>
+        <form id="settingsForm" class="settings-form" autocomplete="off">
+          <div class="form-grid">
+            <label>Nome da loja
+              <input type="text" id="shopName" placeholder="Assistência Exemplo">
+            </label>
+            <label>Endereço
+              <input type="text" id="shopAddress" placeholder="Rua, número, bairro, cidade">
+            </label>
+            <label>Telefone
+              <input type="tel" id="shopPhone" placeholder="(00) 00000-0000">
+            </label>
+            <label>Instagram
+              <input type="text" id="shopInstagram" placeholder="@usuario">
+            </label>
+            <label>Facebook
+              <input type="text" id="shopFacebook" placeholder="facebook.com/sua-pagina">
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="editSettings" class="ghost-btn">Editar</button>
+            <button type="submit" id="saveSettings" class="primary-btn">Salvar</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <!-- Navegação inferior -->
+    <nav class="bottom-nav">
+      <button data-target="listView" class="nav-btn active" aria-label="Home">
+        <span class="nav-label">Início</span>
+      </button>
+      <button data-target="formView" class="nav-btn" aria-label="Nova OS">
+        <span class="nav-label">Nova OS</span>
+      </button>
+      <button data-target="financeView" class="nav-btn" aria-label="Financeiro">
+        <span class="nav-label">Saldo</span>
+      </button>
+      <button data-target="settingsView" class="nav-btn" aria-label="Configurações">
+        <span class="nav-label">Perfil</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Modal de alert/confirm -->
+  <div id="modalOverlay" class="modal-overlay hidden" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div class="modal-body" id="modalMessage"></div>
+      <div class="modal-actions">
+        <button id="modalCancel" class="ghost-btn">Cancelar</button>
+        <button id="modalOk" class="primary-btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
