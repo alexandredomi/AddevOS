@@ -11,7 +11,6 @@ const els = {
   },
   search: document.getElementById('searchInput'),
   filterButtons: document.querySelectorAll('.filter-btn'),
-  filterGroup: document.querySelector('.filter-group'),
   ordersList: document.getElementById('ordersList'),
   navButtons: document.querySelectorAll('.nav-btn'),
   form: document.getElementById('orderForm'),
@@ -36,8 +35,8 @@ const els = {
   closeDetail: document.getElementById('closeDetail'),
   financeTotals: {
     day: document.getElementById('totalDay'),
+    week: document.getElementById('totalWeek'),
     month: document.getElementById('totalMonth'),
-    all: document.getElementById('totalAll'),
   },
   financeList: document.getElementById('financeList'),
 };
@@ -233,18 +232,26 @@ const confirmModal = (msg) => showModal(msg, { confirm: true });
 
 function getSettingsSnapshot() {
   const saved = loadSettings();
-  // If the form is loaded, prefer what's on screen (even se ainda não salvou)
-  const formValues = els.settingsFields
-    ? {
-        shopName: els.settingsFields.shopName.value.trim(),
-        shopAddress: els.settingsFields.shopAddress.value.trim(),
-        shopPhone: formatPhoneDigits(parsePhone(els.settingsFields.shopPhone.value)),
-        shopInstagram: els.settingsFields.shopInstagram.value.trim(),
-        shopFacebook: els.settingsFields.shopFacebook.value.trim(),
-      }
-    : {};
-
-  const merged = { ...saved, ...formValues };
+  
+  // Verify if all fields exist and are properly populated from the form inputs
+  const formValues = {};
+  if (els.settingsFields && els.settingsFields.shopName) {
+    formValues.shopName = els.settingsFields.shopName.value?.trim() || saved.shopName || '';
+    formValues.shopAddress = els.settingsFields.shopAddress.value?.trim() || saved.shopAddress || '';
+    formValues.shopPhone = els.settingsFields.shopPhone.value?.trim() || saved.shopPhone || '';
+    formValues.shopInstagram = els.settingsFields.shopInstagram.value?.trim() || saved.shopInstagram || '';
+    formValues.shopFacebook = els.settingsFields.shopFacebook.value?.trim() || saved.shopFacebook || '';
+  }
+  
+  // Merge: prioritize form values if they exist, otherwise use saved
+  const merged = {
+    shopName: formValues.shopName || saved.shopName || '',
+    shopAddress: formValues.shopAddress || saved.shopAddress || '',
+    shopPhone: formValues.shopPhone || saved.shopPhone || '',
+    shopInstagram: formValues.shopInstagram || saved.shopInstagram || '',
+    shopFacebook: formValues.shopFacebook || saved.shopFacebook || '',
+  };
+  
   return merged;
 }
 
@@ -257,10 +264,10 @@ function printOrder(order, title = 'Ordem de Serviço') {
   const settings = getSettingsSnapshot();
   const shopBlock = [
     settings.shopName && `<div class="shop-name">${settings.shopName}</div>`,
-    settings.shopAddress && `<div class="shop-line">${settings.shopAddress}</div>`,
-    settings.shopPhone && `<div class="shop-line">Tel: ${formatPhoneDigits(settings.shopPhone)}</div>`,
-    settings.shopInstagram && `<div class="shop-line">Instagram: ${settings.shopInstagram}</div>`,
-    settings.shopFacebook && `<div class="shop-line">Facebook: ${settings.shopFacebook}</div>`,
+    settings.shopAddress && `<div class="shop-line"><strong>Endereço:</strong> ${settings.shopAddress}</div>`,
+    settings.shopPhone && `<div class="shop-line"><strong>Telefone:</strong> ${formatPhoneDigits(settings.shopPhone)}</div>`,
+    settings.shopInstagram && `<div class="shop-line"><strong>Instagram:</strong> ${settings.shopInstagram}</div>`,
+    settings.shopFacebook && `<div class="shop-line"><strong>Facebook:</strong> ${settings.shopFacebook}</div>`,
   ]
     .filter(Boolean)
     .join('');
@@ -300,40 +307,73 @@ function printOrder(order, title = 'Ordem de Serviço') {
         .shop {
           text-align: left;
           margin-bottom: 14px;
+          font-size: 18px;
         }
         .shop-name {
           font-weight: 800;
-          font-size: 18px;
+          font-size: 22px;
           letter-spacing: 0.2px;
         }
-        .shop-line { color: #333; font-size: 13px; }
+        .shop-line { color: #333; font-size: 18px; }
         .row { margin-bottom: 10px; }
         .label { display: inline-block; width: 140px; font-weight: 600; }
         .value { color: #222; }
+        .signatures {
+          margin-top: 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+        }
+        .signature-block {
+          flex: 1;
+          text-align: center;
+        }
+        .signature-line {
+          border-bottom: 1px solid #333;
+          height: 60px;
+          margin: 10px 0;
+        }
+        .signature-label {
+          font-size: 16px;
+          font-weight: 700;
+          color: #333;
+          margin-top: 5px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
       </style>
     </head>
     <body>
       ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
       <h1>${title}</h1>
       ${rows}
+      
+      <div class="signatures">
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${order.customerName || 'Cliente'}</div>
+        </div>
+        
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
+        </div>
+      </div>
     </body>
     </html>
   `;
 
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = '0';
-  iframe.style.visibility = 'hidden';
-  iframe.srcdoc = html;
-  document.body.appendChild(iframe);
-
-  iframe.onload = () => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => iframe.remove(), 300);
-  };
+  const printWindow = window.open('', '', 'width=800,height=600');
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  
+  setTimeout(() => {
+    printWindow.print();
+    printWindow.close();
+  }, 250);
 }
 
 function statusChip(status) {
@@ -462,13 +502,12 @@ function openDetail(id) {
     </div>
     <div class="detail-actions status-row">
       <strong class="group-title">Status</strong>
-      <button data-action="status" data-value="Aguardando" class="ghost-btn status-await icon-btn">Aguardando</button>
-      <button data-action="status" data-value="Em andamento" class="ghost-btn status-progress icon-btn">Em andamento</button>
-      <button data-action="status" data-value="Finalizado" class="ghost-btn status-done icon-btn">Finalizar</button>
+      <button data-action="status" data-status="Aguardando" class="filter-btn">Aguardando</button>
+      <button data-action="status" data-status="Em andamento" class="filter-btn">Em andamento</button>
+      <button data-action="status" data-status="Finalizado" class="filter-btn">Finalizar</button>
     </div>
     <div class="detail-actions action-row">
       <strong class="group-title">Ações</strong>
-      <button data-action="save" class="primary-btn icon-btn">Salvar</button>
       <button data-action="edit" class="primary-btn icon-btn">Editar</button>
       <button data-action="print" class="ghost-btn icon-btn">Imprimir</button>
       <button data-action="delete" class="ghost-btn delete-btn icon-btn">Excluir</button>
@@ -485,16 +524,11 @@ function openDetail(id) {
 
 async function handleDetailAction(id, dataset) {
   if (dataset.action === 'status') {
-    setPendingStatus(dataset.value);
-  }
-  if (dataset.action === 'save') {
-    if (await confirmModal('Deseja salvar esta OS?')) {
-      saveManual(id);
-      renderOrders();
-      openDetail(id);
-      updateFinance();
-      await alertModal('OS salva com sucesso.');
-    }
+    setPendingStatus(dataset.status);
+    saveManual(id);
+    renderOrders();
+    updateFinance();
+    openDetail(id); // Refresh the detail view
   }
   if (dataset.action === 'edit') {
     const order = loadOrders().find((o) => o.id === id);
@@ -641,8 +675,6 @@ async function handleSettingsSave(event) {
 
 function updateFinance() {
   const orders = loadOrders().filter((o) => o.status === 'Finalizado');
-  const totalAll = orders.reduce((sum, o) => sum + (o.price || 0), 0);
-  const costAll = orders.reduce((sum, o) => sum + (o.cost || 0), 0);
 
   const today = new Date();
   const totalDay = orders
@@ -655,6 +687,23 @@ function updateFinance() {
     .filter((o) => {
       const d = new Date(o.updatedAt);
       return d.toDateString() === today.toDateString();
+    })
+    .reduce((sum, o) => sum + (o.cost || 0), 0);
+
+  // Calculate start of week (Monday)
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
+  startOfWeek.setHours(0, 0, 0, 0);
+  const totalWeek = orders
+    .filter((o) => {
+      const d = new Date(o.updatedAt);
+      return d >= startOfWeek;
+    })
+    .reduce((sum, o) => sum + (o.price || 0), 0);
+  const costWeek = orders
+    .filter((o) => {
+      const d = new Date(o.updatedAt);
+      return d >= startOfWeek;
     })
     .reduce((sum, o) => sum + (o.cost || 0), 0);
 
@@ -674,12 +723,12 @@ function updateFinance() {
   els.financeTotals.day.textContent = formatCurrency(totalDay);
   document.getElementById('costDay').textContent = `Custo: ${formatCurrency(costDay)}`;
   document.getElementById('profitDay').textContent = `Lucro: ${formatCurrency(totalDay - costDay)}`;
+  els.financeTotals.week.textContent = formatCurrency(totalWeek);
+  document.getElementById('costWeek').textContent = `Custo: ${formatCurrency(costWeek)}`;
+  document.getElementById('profitWeek').textContent = `Lucro: ${formatCurrency(totalWeek - costWeek)}`;
   els.financeTotals.month.textContent = formatCurrency(totalMonth);
   document.getElementById('costMonth').textContent = `Custo: ${formatCurrency(costMonth)}`;
   document.getElementById('profitMonth').textContent = `Lucro: ${formatCurrency(totalMonth - costMonth)}`;
-  els.financeTotals.all.textContent = formatCurrency(totalAll);
-  document.getElementById('costAll').textContent = `Custo: ${formatCurrency(costAll)}`;
-  document.getElementById('profitAll').textContent = `Lucro: ${formatCurrency(totalAll - costAll)}`;
 
   els.financeList.innerHTML = orders
     .map(
@@ -715,7 +764,6 @@ function bindEvents() {
       els.filterButtons.forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       renderOrders();
-      updateFilterOverflow();
     })
   );
   els.closeForm.addEventListener('click', () => openScreen('listView'));
@@ -735,10 +783,6 @@ function bindEvents() {
   });
   formFields.phone.addEventListener('input', () => formatPhoneInput(formFields.phone));
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
-  if (els.filterGroup) {
-    els.filterGroup.addEventListener('scroll', updateFilterOverflow);
-    window.addEventListener('resize', updateFilterOverflow);
-  }
 }
 
 function start() {
@@ -751,21 +795,12 @@ function start() {
   initNavigation();
   renderOrders();
   updateFinance();
-  updateFilterOverflow();
 }
 
 start();
 function setPendingStatus(status) {
   detailPendingStatus = status;
   document.querySelectorAll('.status-row button').forEach((btn) => {
-    btn.classList.toggle('active', btn.dataset.value === status);
+    btn.classList.toggle('active', btn.dataset.status === status);
   });
-}
-function updateFilterOverflow() {
-  const el = els.filterGroup;
-  if (!el) return;
-  const overflowing = el.scrollWidth - el.clientWidth > 4;
-  el.classList.toggle('overflowing', overflowing);
-  const atEnd = el.scrollLeft >= el.scrollWidth - el.clientWidth - 8;
-  el.classList.toggle('at-end', atEnd);
 }

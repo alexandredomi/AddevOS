@@ -93,32 +93,6 @@ main { display: grid; gap: 14px; }
   scrollbar-width: thin;
   position: relative;
 }
-.filter-group::after {
-      content: "\2192";
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 8px 12px;
-  background: linear-gradient(120deg, rgba(255,255,255,0.95), rgba(89,103,255,0.16));
-  color: var(--primary-strong);
-  font-weight: 800;
-  letter-spacing: 0.4px;
-  border-radius: 999px;
-  border: 1px solid rgba(12,11,68,0.08);
-  box-shadow: 0 10px 24px rgba(0,0,0,0.14), 0 2px 8px rgba(89,103,255,0.18);
-  backdrop-filter: blur(4px);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
-}
-.filter-group.overflowing::after {
-  opacity: 1;
-  animation: nudge 1.4s ease-in-out infinite;
-}
-.filter-group.at-end::after {
-  opacity: 0;
-}
 .filter-btn {
   border: 1px solid rgba(12,11,68,0.12);
   background: #fff;
@@ -478,9 +452,6 @@ textarea { resize: vertical; }
   .card { grid-template-columns: 2fr 1fr; align-items: center; }
   .fab { right: 28px; bottom: 96px; }
 }
-.filter-group.overflowing:not(.at-end) {
-  padding-right: 26px;
-}
 
 .filter-group::-webkit-scrollbar {
   height: 6px;
@@ -491,9 +462,4 @@ textarea { resize: vertical; }
 }
 .filter-group::-webkit-scrollbar-track {
   background: transparent;
-}
-
-@keyframes nudge {
-  0%, 60%, 100% { transform: translateY(-50%) translateX(0); }
-  30% { transform: translateY(-50%) translateX(6px); }
 }
