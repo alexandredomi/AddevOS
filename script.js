@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'orders';
+﻿const STORAGE_KEY = 'orders';
 const SETTINGS_KEY = 'settings';
 const DEFAULT_LOGO = 'assets/img/logo.png';
 
@@ -64,6 +64,7 @@ const formFields = {
 let editingId = null;
 let detailPendingStatus = null;
 let detailCurrentId = null;
+let detailHistoryExpanded = false;
 
 function loadOrders() {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -424,7 +425,7 @@ function renderOrders() {
     const matchTerm =
       o.customerName.toLowerCase().includes(term) ||
       o.device.toLowerCase().includes(term);
-    const matchStatus = status ? o.status === status : true;
+    const matchStatus = term ? true : (status ? o.status === status : true);
     return matchTerm && matchStatus;
   });
 
@@ -489,9 +490,11 @@ function clearForm() {
 function openScreen(target) {
   const element = els.screens[target] || document.getElementById(target);
   if (!element) return;
+  const app = document.getElementById('app');
 
   Object.values(els.screens).forEach((s) => s.classList.remove('active'));
   element.classList.add('active');
+  app?.classList.toggle('home-header-active', element.id === 'listView');
 
   els.navButtons.forEach((btn) =>
     btn.classList.toggle('active', btn.dataset.target === element.id)
@@ -524,14 +527,19 @@ function openForm(editOrder) {
 function openDetail(id) {
   const order = loadOrders().find((o) => o.id === id);
   if (!order) return;
+  if (detailCurrentId !== id) detailHistoryExpanded = false;
   detailCurrentId = id;
   detailPendingStatus = order.status;
 
-  const historyList = order.history
+  const sortedHistory = order.history
     .slice()
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .map((h) => `<li>${formatDate(h.date)} — ${h.action}</li>`)
-    .join('');
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const visibleHistory = detailHistoryExpanded ? sortedHistory : sortedHistory.slice(0, 4);
+  const historyList = visibleHistory.map((h) => `<li>${formatDate(h.date)} - ${h.action}</li>`).join('');
+  const showToggleHistory = sortedHistory.length > 4;
+  const historyToggleButton = showToggleHistory
+    ? `<button data-action="toggle-history" class="ghost-btn history-toggle-btn">${detailHistoryExpanded ? 'Ver menos' : 'Ver mais'}</button>`
+    : '';
 
   els.detailContent.innerHTML = `
     <div class="detail-grid">
@@ -549,7 +557,8 @@ function openDetail(id) {
     </div>
     <div class="history">
       <strong>Histórico</strong>
-      <ul>${historyList}</ul>
+      <ul>${historyList || '<li>-</li>'}</ul>
+      ${historyToggleButton}
     </div>
     <div class="detail-actions status-row">
       <strong class="group-title">Status</strong>
@@ -574,6 +583,11 @@ function openDetail(id) {
 }
 
 async function handleDetailAction(id, dataset) {
+  if (dataset.action === 'toggle-history') {
+    detailHistoryExpanded = !detailHistoryExpanded;
+    openDetail(id);
+    return;
+  }
   if (dataset.action === 'status') {
     setPendingStatus(dataset.status);
     saveManual(id);
@@ -714,8 +728,7 @@ function renderSettings() {
   els.profileElements.instagram.textContent = settings.shopInstagram || '-';
   els.profileElements.facebook.textContent = settings.shopFacebook || '-';
 
-  // Hide form
-  els.settingsForm.classList.add('hidden');
+  closeSettingsModal();
 }
 
 function enableSettingsEdit() {
@@ -729,6 +742,10 @@ function enableSettingsEdit() {
     input.value = key === 'shopPhone' ? formatPhoneDigits(parsePhone(val)) : val;
   });
   els.settingsForm.classList.remove('hidden');
+}
+
+function closeSettingsModal() {
+  els.settingsForm.classList.add('hidden');
 }
 
 async function handleSettingsSave(event) {
@@ -758,7 +775,7 @@ async function handleSettingsSave(event) {
 }
 
 function cancelSettingsEdit() {
-  renderSettings();
+  closeSettingsModal();
 }
 
 function updateFinance() {
@@ -844,7 +861,10 @@ function updateFinance() {
             <span class="price">${formatCurrency(o.price)}</span>
           </header>
           <div class="meta">${o.device}</div>
-          <div class="meta">Custo: ${formatCurrency(o.cost || 0)} | Lucro: ${formatCurrency((o.price || 0) - (o.cost || 0))}</div>
+          <div class="finance-meta-row">
+            <span class="finance-badge cost">Custo: ${formatCurrency(o.cost || 0)}</span>
+            <span class="finance-badge profit">Lucro: ${formatCurrency((o.price || 0) - (o.cost || 0))}</span>
+          </div>
           <div class="meta">Finalizado em ${formatDate(o.updatedAt)}</div>
         </article>`
           )
@@ -885,6 +905,14 @@ function bindEvents() {
   els.settingsForm.addEventListener('submit', handleSettingsSave);
   document.getElementById('editSettings').addEventListener('click', enableSettingsEdit);
   document.getElementById('cancelSettings').addEventListener('click', cancelSettingsEdit);
+  els.settingsForm.addEventListener('click', (event) => {
+    if (event.target === els.settingsForm) closeSettingsModal();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !els.settingsForm.classList.contains('hidden')) {
+      closeSettingsModal();
+    }
+  });
   document.querySelectorAll('.close-settings').forEach((btn) =>
     btn.addEventListener('click', () => openScreen('listView'))
   );
@@ -894,6 +922,8 @@ function bindEvents() {
   });
   formFields.phone.addEventListener('input', () => formatPhoneInput(formFields.phone));
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
+  els.settingsFields.shopPhone.addEventListener('input', () => formatPhoneInput(els.settingsFields.shopPhone));
+  els.settingsFields.shopPhone.addEventListener('blur', () => formatPhoneInput(els.settingsFields.shopPhone));
 }
 
 function start() {
@@ -915,3 +945,5 @@ function setPendingStatus(status) {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
 }
+
+

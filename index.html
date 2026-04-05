@@ -8,7 +8,7 @@
   <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
 </head>
 <body>
-  <div id="app">
+  <div id="app" class="home-header-active">
     <header class="topbar">
       <div class="brand">
         <img src="assets/img/logo.png" alt="AD.Dev" class="logo">
@@ -39,25 +39,29 @@
           <h2 id="formTitle">Nova OS</h2>
           <button id="closeForm" class="ghost-btn">✕</button>
         </header>
-        <div class="form-card">
-          <form id="orderForm" autocomplete="off">
+        <div class="form-hero">
+          <p class="form-eyebrow">Atendimento</p>
+          <h3>Abra uma nova ordem de serviço com mais organização</h3>
+          <p class="form-copy">Preencha os dados principais do cliente, do aparelho e do orçamento em uma tela mais clara e confortável.</p>
+        </div>
+        <form id="orderForm" class="order-form" autocomplete="off">
             <div class="form-grid">
-              <label>Nome do cliente:
+              <label class="form-field">Nome do cliente:
                 <input type="text" id="customerName" required>
               </label>
               <label>Número de telefone:
                 <input type="tel" id="phone">
               </label>
-              <label>Modelo do aparelho:
+              <label class="form-field">Modelo do aparelho:
                 <input type="text" id="device" required>
               </label>
-              <label>Defeito Relatado:
+              <label class="form-field form-field-wide">Defeito Relatado:
                 <textarea id="issue" rows="2" required></textarea>
               </label>
-              <label>Valor (R$):
+              <label class="form-field">Valor (R$):
                 <input type="text" id="price" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
               </label>
-              <label>Custo (R$):
+              <label class="form-field">Custo (R$):
                 <input type="text" id="cost" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
               </label>
               <label>Observações:
@@ -69,8 +73,7 @@
               <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
               <button type="submit" class="primary-btn">Salvar</button>
             </div>
-          </form>
-        </div>
+        </form>
       </section>
 
       <!-- Detalhe da OS -->
@@ -88,24 +91,29 @@
           <h2>Financeiro</h2>
           <button id="closeFinance" class="ghost-btn">✕</button>
         </header>
+        <div class="finance-hero">
+          <p class="finance-eyebrow">Visão rápida</p>
+          <h3>Receita, custo e lucro mais claros no seu fechamento</h3>
+          <p class="finance-copy">Acompanhe o desempenho do dia, da semana e do mês com destaque visual para o que entra e o que sai.</p>
+        </div>
         <div class="finance-grid">
-          <div class="stat">
+          <div class="stat finance-stat">
             <p>Hoje</p>
-            <strong id="totalDay">R$ 0,00</strong>
-            <small id="costDay" class="muted">Custo: R$ 0,00</small>
-            <small id="profitDay" class="muted">Lucro: R$ 0,00</small>
+            <strong id="totalDay" class="finance-total">R$ 0,00</strong>
+            <small id="costDay" class="finance-line finance-cost">Custo: R$ 0,00</small>
+            <small id="profitDay" class="finance-line finance-profit">Lucro: R$ 0,00</small>
           </div>
-          <div class="stat">
+          <div class="stat finance-stat">
             <p>Semana</p>
-            <strong id="totalWeek">R$ 0,00</strong>
-            <small id="costWeek" class="muted">Custo: R$ 0,00</small>
-            <small id="profitWeek" class="muted">Lucro: R$ 0,00</small>
+            <strong id="totalWeek" class="finance-total">R$ 0,00</strong>
+            <small id="costWeek" class="finance-line finance-cost">Custo: R$ 0,00</small>
+            <small id="profitWeek" class="finance-line finance-profit">Lucro: R$ 0,00</small>
           </div>
-          <div class="stat">
+          <div class="stat finance-stat">
             <p>Mês</p>
-            <strong id="totalMonth">R$ 0,00</strong>
-            <small id="costMonth" class="muted">Custo: R$ 0,00</small>
-            <small id="profitMonth" class="muted">Lucro: R$ 0,00</small>
+            <strong id="totalMonth" class="finance-total">R$ 0,00</strong>
+            <small id="costMonth" class="finance-line finance-cost">Custo: R$ 0,00</small>
+            <small id="profitMonth" class="finance-line finance-profit">Lucro: R$ 0,00</small>
           </div>
         </div>
         <h3>Serviços finalizados</h3>
