@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'orders';
 const SETTINGS_KEY = 'settings';
+const DEFAULT_LOGO = 'assets/img/logo.png';
 
 const els = {
   screens: {
@@ -18,12 +19,21 @@ const els = {
   closeForm: document.getElementById('closeForm'),
   cancelForm: document.getElementById('cancelForm'),
   settingsForm: document.getElementById('settingsForm'),
+  profileElements: {
+    avatar: document.getElementById('profileAvatar'),
+    name: document.getElementById('profileName'),
+    address: document.getElementById('profileAddress'),
+    phone: document.getElementById('profilePhone'),
+    instagram: document.getElementById('profileInstagram'),
+    facebook: document.getElementById('profileFacebook'),
+  },
   settingsFields: {
     shopName: document.getElementById('shopName'),
     shopAddress: document.getElementById('shopAddress'),
     shopPhone: document.getElementById('shopPhone'),
     shopInstagram: document.getElementById('shopInstagram'),
     shopFacebook: document.getElementById('shopFacebook'),
+    shopLogoFile: document.getElementById('shopLogoFile'),
   },
   modal: {
     overlay: document.getElementById('modalOverlay'),
@@ -113,6 +123,7 @@ function loadSettings() {
     shopPhone: '',
     shopInstagram: '',
     shopFacebook: '',
+    shopLogo: '',
   };
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaults));
   return defaults;
@@ -250,6 +261,7 @@ function getSettingsSnapshot() {
     shopPhone: formValues.shopPhone || saved.shopPhone || '',
     shopInstagram: formValues.shopInstagram || saved.shopInstagram || '',
     shopFacebook: formValues.shopFacebook || saved.shopFacebook || '',
+    shopLogo: saved.shopLogo || '',
   };
   
   return merged;
@@ -262,7 +274,10 @@ function formatDate(dateString) {
 
 function printOrder(order, title = 'Ordem de Serviço') {
   const settings = getSettingsSnapshot();
+  const logoSrc = settings.shopLogo || DEFAULT_LOGO;
+  const logoHtml = `<img src="${logoSrc}" alt="Logo" style="max-width: 120px; height: auto; margin-bottom: 10px;">`;
   const shopBlock = [
+    logoHtml,
     settings.shopName && `<div class="shop-name">${settings.shopName}</div>`,
     settings.shopAddress && `<div class="shop-line"><strong>Endereço:</strong> ${settings.shopAddress}</div>`,
     settings.shopPhone && `<div class="shop-line"><strong>Telefone:</strong> ${formatPhoneDigits(settings.shopPhone)}</div>`,
@@ -386,12 +401,26 @@ function statusChip(status) {
   return `<span class="chip ${cfg.cls}"><span></span>${cfg.label}</span>`;
 }
 
+function getDateLabel(dateString) {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) {
+    return 'Hoje';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Ontem';
+  } else {
+    return date.toLocaleDateString('pt-BR');
+  }
+}
+
 function renderOrders() {
   const term = els.search.value.toLowerCase();
   const activeFilter =
     Array.from(els.filterButtons).find((b) => b.classList.contains('active')) || null;
   const status = activeFilter ? activeFilter.dataset.status : '';
-  const orders = loadOrders().filter((o) => {
+  let orders = loadOrders().filter((o) => {
     const matchTerm =
       o.customerName.toLowerCase().includes(term) ||
       o.device.toLowerCase().includes(term);
@@ -404,23 +433,45 @@ function renderOrders() {
     return;
   }
 
-  els.ordersList.innerHTML = orders
-    .map(
-      (o) => `
-    <article class="card" data-id="${o.id}">
-      <header>
-        <div>
-          <strong>${o.customerName}</strong>
-          <div class="meta">${o.device}</div>
-        </div>
-        ${statusChip(o.status)}
-      </header>
-      <div class="meta">${o.issue}</div>
-      <div class="meta">Atualizado: ${formatDate(o.updatedAt)}</div>
-      <div class="price">${formatCurrency(o.price)}</div>
-    </article>`
-    )
-    .join('');
+  // Sort by createdAt descending
+  orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  // Group by date label
+  const groups = {};
+  orders.forEach((o) => {
+    const label = getDateLabel(o.createdAt);
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(o);
+  });
+
+  // Build HTML
+  let html = '';
+  Object.keys(groups).forEach((label) => {
+    html += `<section class="date-group">
+      <h3 class="date-header">${label}</h3>
+      <div class="cards">
+        ${groups[label]
+          .map(
+            (o) => `
+        <article class="card" data-id="${o.id}">
+          <header>
+            <div>
+              <strong>${o.customerName}</strong>
+              <div class="meta">${o.device}</div>
+            </div>
+            ${statusChip(o.status)}
+          </header>
+          <div class="meta">${o.issue}</div>
+          <div class="meta">Atualizado: ${formatDate(o.updatedAt)}</div>
+          <div class="price">${formatCurrency(o.price)}</div>
+        </article>`
+          )
+          .join('')}
+      </div>
+    </section>`;
+  });
+
+  els.ordersList.innerHTML = html;
 
   document.querySelectorAll('.card').forEach((card) =>
     card.addEventListener('click', () => openDetail(card.dataset.id))
@@ -644,37 +695,77 @@ function handleFormPrint() {
   printOrder(orderLike, 'Nova OS');
 }
 
-function renderSettings(disable = true) {
-  const settings = loadSettings();
-  Object.entries(els.settingsFields).forEach(([key, input]) => {
-    const val = settings[key] || '';
-    input.value = key === 'shopPhone' ? formatPhoneDigits(parsePhone(val)) : val;
-    input.disabled = disable;
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Falha ao ler imagem.'));
+    reader.readAsDataURL(file);
   });
-  document.getElementById('saveSettings').disabled = disable;
+}
+
+function renderSettings() {
+  const settings = loadSettings();
+  // Display in profile
+  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_LOGO;
+  els.profileElements.name.textContent = settings.shopName || 'Nome da Loja';
+  els.profileElements.address.textContent = settings.shopAddress || 'Endereço';
+  els.profileElements.phone.textContent = settings.shopPhone ? formatPhoneDigits(settings.shopPhone) : '-';
+  els.profileElements.instagram.textContent = settings.shopInstagram || '-';
+  els.profileElements.facebook.textContent = settings.shopFacebook || '-';
+
+  // Hide form
+  els.settingsForm.classList.add('hidden');
 }
 
 function enableSettingsEdit() {
-  Object.values(els.settingsFields).forEach((input) => (input.disabled = false));
-  document.getElementById('saveSettings').disabled = false;
+  const settings = loadSettings();
+  Object.entries(els.settingsFields).forEach(([key, input]) => {
+    if (key === 'shopLogoFile') {
+      input.value = '';
+      return;
+    }
+    const val = settings[key] || '';
+    input.value = key === 'shopPhone' ? formatPhoneDigits(parsePhone(val)) : val;
+  });
+  els.settingsForm.classList.remove('hidden');
 }
 
 async function handleSettingsSave(event) {
   event.preventDefault();
+  const current = loadSettings();
+  let shopLogo = current.shopLogo || '';
+  const logoFile = els.settingsFields.shopLogoFile.files?.[0];
+  if (logoFile) {
+    if (logoFile.size > 1024 * 1024) {
+      await alertModal('A imagem da logo deve ter no maximo 1MB.');
+      return;
+    }
+    shopLogo = await readFileAsDataUrl(logoFile);
+  }
+
   const data = {
     shopName: els.settingsFields.shopName.value.trim(),
     shopAddress: els.settingsFields.shopAddress.value.trim(),
     shopPhone: parsePhone(els.settingsFields.shopPhone.value),
     shopInstagram: els.settingsFields.shopInstagram.value.trim(),
     shopFacebook: els.settingsFields.shopFacebook.value.trim(),
+    shopLogo,
   };
   saveSettings(data);
-  renderSettings(true);
+  renderSettings();
   await alertModal('Configurações salvas.');
 }
 
+function cancelSettingsEdit() {
+  renderSettings();
+}
+
 function updateFinance() {
-  const orders = loadOrders().filter((o) => o.status === 'Finalizado');
+  let orders = loadOrders().filter((o) => o.status === 'Finalizado');
+
+  // Sort by updatedAt descending
+  orders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
   const today = new Date();
   const totalDay = orders
@@ -730,20 +821,39 @@ function updateFinance() {
   document.getElementById('costMonth').textContent = `Custo: ${formatCurrency(costMonth)}`;
   document.getElementById('profitMonth').textContent = `Lucro: ${formatCurrency(totalMonth - costMonth)}`;
 
-  els.financeList.innerHTML = orders
-    .map(
-      (o) => `
-    <article class="card">
-      <header>
-        <strong>${o.customerName}</strong>
-        <span class="price">${formatCurrency(o.price)}</span>
-      </header>
-      <div class="meta">${o.device}</div>
-      <div class="meta">Custo: ${formatCurrency(o.cost || 0)} | Lucro: ${formatCurrency((o.price || 0) - (o.cost || 0))}</div>
-      <div class="meta">Finalizado em ${formatDate(o.updatedAt)}</div>
-    </article>`
-    )
-    .join('');
+  // Group by date label
+  const groups = {};
+  orders.forEach((o) => {
+    const label = getDateLabel(o.updatedAt);
+    if (!groups[label]) groups[label] = [];
+    groups[label].push(o);
+  });
+
+  // Build HTML
+  let html = '';
+  Object.keys(groups).forEach((label) => {
+    html += `<section class="date-group">
+      <h3 class="date-header">${label}</h3>
+      <div class="cards compact">
+        ${groups[label]
+          .map(
+            (o) => `
+        <article class="card">
+          <header>
+            <strong>${o.customerName}</strong>
+            <span class="price">${formatCurrency(o.price)}</span>
+          </header>
+          <div class="meta">${o.device}</div>
+          <div class="meta">Custo: ${formatCurrency(o.cost || 0)} | Lucro: ${formatCurrency((o.price || 0) - (o.cost || 0))}</div>
+          <div class="meta">Finalizado em ${formatDate(o.updatedAt)}</div>
+        </article>`
+          )
+          .join('')}
+      </div>
+    </section>`;
+  });
+
+  els.financeList.innerHTML = html;
 }
 
 function initNavigation() {
@@ -774,6 +884,7 @@ function bindEvents() {
   document.getElementById('printForm').addEventListener('click', handleFormPrint);
   els.settingsForm.addEventListener('submit', handleSettingsSave);
   document.getElementById('editSettings').addEventListener('click', enableSettingsEdit);
+  document.getElementById('cancelSettings').addEventListener('click', cancelSettingsEdit);
   document.querySelectorAll('.close-settings').forEach((btn) =>
     btn.addEventListener('click', () => openScreen('listView'))
   );

@@ -30,7 +30,7 @@
           </div>
         </div>
         <h2 class="section-title">Lista de OS</h2>
-        <div id="ordersList" class="cards"></div>
+        <div id="ordersList" class="orders-container"></div>
       </section>
 
       <!-- Formulário Nova/Editar OS -->
@@ -39,36 +39,38 @@
           <h2 id="formTitle">Nova OS</h2>
           <button id="closeForm" class="ghost-btn">✕</button>
         </header>
-        <form id="orderForm" autocomplete="off">
-          <div class="form-grid">
-            <label>Nome do cliente:
-              <input type="text" id="customerName" required>
-            </label>
-            <label>Número de telefone:
-              <input type="tel" id="phone">
-            </label>
-            <label>Modelo do aparelho:
-              <input type="text" id="device" required>
-            </label>
-            <label>Defeito Relatado:
-              <textarea id="issue" rows="2" required></textarea>
-            </label>
-            <label>Valor (R$):
-              <input type="text" id="price" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
-            </label>
-            <label>Custo (R$):
-              <input type="text" id="cost" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
-            </label>
-            <label>Observações:
-              <textarea id="notes" rows="2"></textarea>
-            </label>
-          </div>
-          <div class="form-actions">
-            <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>
-            <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
-            <button type="submit" class="primary-btn">Salvar</button>
-          </div>
-        </form>
+        <div class="form-card">
+          <form id="orderForm" autocomplete="off">
+            <div class="form-grid">
+              <label>Nome do cliente:
+                <input type="text" id="customerName" required>
+              </label>
+              <label>Número de telefone:
+                <input type="tel" id="phone">
+              </label>
+              <label>Modelo do aparelho:
+                <input type="text" id="device" required>
+              </label>
+              <label>Defeito Relatado:
+                <textarea id="issue" rows="2" required></textarea>
+              </label>
+              <label>Valor (R$):
+                <input type="text" id="price" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+              </label>
+              <label>Custo (R$):
+                <input type="text" id="cost" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+              </label>
+              <label>Observações:
+                <textarea id="notes" rows="2"></textarea>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>
+              <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
+              <button type="submit" class="primary-btn">Salvar</button>
+            </div>
+          </form>
+        </div>
       </section>
 
       <!-- Detalhe da OS -->
@@ -106,37 +108,68 @@
             <small id="profitMonth" class="muted">Lucro: R$ 0,00</small>
           </div>
         </div>
-        <h2>Serviços finalizados</h2>
-        <div id="financeList" class="cards compact"></div>
+        <h3>Serviços finalizados</h3>
+        <div id="financeList" class="finance-container"></div>
       </section>
 
       <!-- Configurações -->
       <section id="settingsView" class="screen">
         <header class="section-header">
-          <h2>Configurações</h2>
+          <h2>Perfil da Loja</h2>
           <button data-target="listView" class="ghost-btn close-settings">✕</button>
         </header>
-        <form id="settingsForm" class="settings-form" autocomplete="off">
-          <div class="form-grid">
-            <label>Nome da loja
-              <input type="text" id="shopName" placeholder="Assistência Exemplo">
-            </label>
-            <label>Endereço
-              <input type="text" id="shopAddress" placeholder="Rua, número, bairro, cidade">
-            </label>
-            <label>Telefone
-              <input type="tel" id="shopPhone" placeholder="(00) 00000-0000">
-            </label>
-            <label>Instagram
-              <input type="text" id="shopInstagram" placeholder="@usuario">
-            </label>
-            <label>Facebook
-              <input type="text" id="shopFacebook" placeholder="facebook.com/sua-pagina">
-            </label>
+        <div class="profile-card">
+          <div class="profile-header">
+            <div class="profile-avatar">
+              <img id="profileAvatar" src="assets/img/logo.png" alt="Logo" class="avatar-img">
+            </div>
+            <div class="profile-info">
+              <h3 id="profileName">Nome da Loja</h3>
+              <p id="profileAddress">Endereço</p>
+            </div>
+            <button id="editSettings" class="edit-btn">Editar</button>
           </div>
-          <div class="form-actions">
-            <button type="button" id="editSettings" class="ghost-btn">Editar</button>
-            <button type="submit" id="saveSettings" class="primary-btn">Salvar</button>
+          <div class="profile-details">
+            <div class="detail-item">
+              <span class="detail-label">Telefone:</span>
+              <span id="profilePhone">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Instagram:</span>
+              <span id="profileInstagram">-</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Facebook:</span>
+              <span id="profileFacebook">-</span>
+            </div>
+          </div>
+        </div>
+        <form id="settingsForm" class="settings-form hidden" autocomplete="off">
+          <div class="form-card">
+            <div class="form-grid">
+              <label>Nome da loja
+                <input type="text" id="shopName" placeholder="Assistência Exemplo">
+              </label>
+              <label>Endereço
+                <input type="text" id="shopAddress" placeholder="Rua, número, bairro, cidade">
+              </label>
+              <label>Telefone
+                <input type="tel" id="shopPhone" placeholder="(00) 00000-0000">
+              </label>
+              <label>Instagram
+                <input type="text" id="shopInstagram" placeholder="@usuario">
+              </label>
+              <label>Facebook
+                <input type="text" id="shopFacebook" placeholder="facebook.com/sua-pagina">
+              </label>
+              <label>Logo da loja
+                <input type="file" id="shopLogoFile" accept="image/*">
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="button" id="cancelSettings" class="ghost-btn">Cancelar</button>
+              <button type="submit" id="saveSettings" class="primary-btn">Salvar</button>
+            </div>
           </div>
         </form>
       </section>
