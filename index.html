@@ -67,6 +67,12 @@
               <label>Observações:
                 <textarea id="notes" rows="2"></textarea>
               </label>
+              <label class="form-field form-field-wide">Foto do cliente:
+                <input type="file" id="customerPhotoFile" accept="image/*">
+                <div style="text-align: center; margin-top: 10px;">
+                  <img id="customerPhotoPreview" src="assets/img/perfil-sem-foto.jpg" alt="Foto do cliente" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #ddd;">
+                </div>
+              </label>
             </div>
             <div class="form-actions">
               <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>

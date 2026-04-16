@@ -216,7 +216,7 @@ input:focus, textarea:focus {
   height: 60px;
   border-radius: 50%;
   overflow: hidden;
-  background: var(--primary);
+  background-color: rgb(225, 225, 225);
   display: flex;
   align-items: center;
   justify-content: center;

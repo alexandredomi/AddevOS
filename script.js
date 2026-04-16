@@ -1,6 +1,7 @@
 ﻿const STORAGE_KEY = 'orders';
 const SETTINGS_KEY = 'settings';
 const DEFAULT_LOGO = 'assets/img/logo.png';
+const DEFAULT_PROFILE_PHOTO = 'assets/img/perfil-sem-foto.jpg';
 
 const els = {
   screens: {
@@ -59,6 +60,7 @@ const formFields = {
   price: document.getElementById('price'),
   cost: document.getElementById('cost'),
   notes: document.getElementById('notes'),
+  customerPhotoFile: document.getElementById('customerPhotoFile'),
 };
 
 let editingId = null;
@@ -143,6 +145,7 @@ function createOrderObject({
   cost = 0,
   notes = '',
   status = 'Aguardando',
+  customerPhoto = '',
 }) {
   const now = new Date().toISOString();
   return {
@@ -155,6 +158,7 @@ function createOrderObject({
     cost: Number(cost) || 0,
     notes,
     status,
+    customerPhoto,
     createdAt: now,
     updatedAt: now,
     history: [
@@ -514,6 +518,14 @@ function clearForm() {
   els.form.reset();
   formFields.price.dataset.raw = 0;
   formFields.cost.dataset.raw = 0;
+  updateCustomerPhotoPreview(DEFAULT_PROFILE_PHOTO);
+}
+
+function updateCustomerPhotoPreview(photoSrc) {
+  const preview = document.getElementById('customerPhotoPreview');
+  if (preview) {
+    preview.src = photoSrc || DEFAULT_PROFILE_PHOTO;
+  }
 }
 
 function openScreen(target) {
@@ -548,6 +560,8 @@ function openForm(editOrder) {
     formatCurrencyInput(formFields.cost);
     formatPhoneInput(formFields.phone);
     formFields.notes.value = editOrder.notes;
+    formFields.customerPhotoFile.value = '';
+    updateCustomerPhotoPreview(editOrder.customerPhoto || DEFAULT_PROFILE_PHOTO);
   } else {
     clearForm();
   }
@@ -572,6 +586,9 @@ function openDetail(id) {
 
   els.detailContent.innerHTML = `
     <div class="detail-grid">
+      <div style="grid-column: 1 / -1; text-align: center; margin-bottom: 15px;">
+        <img src="${order.customerPhoto || DEFAULT_PROFILE_PHOTO}" alt="${order.customerName}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+      </div>
       <div><strong>Cliente:</strong> ${order.customerName}</div>
       <div><strong>Telefone:</strong> ${order.phone ? formatPhoneDigits(order.phone) : '-'}</div>
       <div><strong>Aparelho:</strong> ${order.device}</div>
@@ -773,6 +790,7 @@ async function handleSubmit(event) {
     price: parseCurrency(formFields.price.value),
     cost: parseCurrency(formFields.cost.value),
     notes: formFields.notes.value.trim(),
+    customerPhoto: '',
   };
 
   if (!data.customerName || !data.device || !data.issue) {
@@ -780,14 +798,27 @@ async function handleSubmit(event) {
     return;
   }
 
+  // Handle customer photo
+  const photoFile = formFields.customerPhotoFile.files?.[0];
+  if (photoFile) {
+    if (photoFile.size > 1024 * 1024) {
+      await alertModal('A imagem da foto deve ter no máximo 1MB.');
+      return;
+    }
+    data.customerPhoto = await readFileAsDataUrl(photoFile);
+  }
+
   const orders = loadOrders();
   if (editingId) {
     const now = new Date().toISOString();
+    const currentOrder = orders.find(o => o.id === editingId);
+    const photo = data.customerPhoto || currentOrder.customerPhoto || '';
     const updated = orders.map((o) =>
       o.id === editingId
         ? {
             ...o,
             ...data,
+            customerPhoto: photo,
             price: data.price,
             cost: data.cost,
             updatedAt: now,
@@ -1038,6 +1069,19 @@ function bindEvents() {
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
   els.settingsFields.shopPhone.addEventListener('input', () => formatPhoneInput(els.settingsFields.shopPhone));
   els.settingsFields.shopPhone.addEventListener('blur', () => formatPhoneInput(els.settingsFields.shopPhone));
+  
+  // Event listener for customer photo preview
+  formFields.customerPhotoFile.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        updateCustomerPhotoPreview(dataUrl);
+      } catch (error) {
+        console.error('Erro ao ler imagem:', error);
+      }
+    }
+  });
 }
 
 function start() {
