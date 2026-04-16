@@ -1,6 +1,7 @@
 ﻿const STORAGE_KEY = 'orders';
 const SETTINGS_KEY = 'settings';
 const DEFAULT_LOGO = 'assets/img/logo.png';
+const DEFAULT_PROFILE_PHOTO = 'assets/img/perfil-sem-foto.jpg';
 
 const els = {
   screens: {
@@ -59,6 +60,7 @@ const formFields = {
   price: document.getElementById('price'),
   cost: document.getElementById('cost'),
   notes: document.getElementById('notes'),
+  customerPhotoFile: document.getElementById('customerPhotoFile'),
 };
 
 let editingId = null;
@@ -143,6 +145,7 @@ function createOrderObject({
   cost = 0,
   notes = '',
   status = 'Aguardando',
+  customerPhoto = '',
 }) {
   const now = new Date().toISOString();
   return {
@@ -155,6 +158,7 @@ function createOrderObject({
     cost: Number(cost) || 0,
     notes,
     status,
+    customerPhoto,
     createdAt: now,
     updatedAt: now,
     history: [
@@ -340,48 +344,116 @@ function printOrder(order, title = 'Ordem de Serviço') {
     )
     .join('');
 
-  const printContent = `
-    <div id="print-content-wrapper" style="display: none; position: absolute; left: -9999px; width: 100%; padding: 24px;">
-      <div style="font-family: Arial, sans-serif; color: #111;">
-        ${shopBlock ? `<div style="text-align: left; margin-bottom: 14px; font-size: 18px;">${shopBlock}</div>` : ''}
-        <h1 style="margin: 12px 0 10px; font-size: 22px;">${title}</h1>
-        ${rows}
-        
-        <div style="margin-top: 40px; display: flex; flex-direction: column; gap: 30px;">
-          <div style="flex: 1; text-align: center;">
-            <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
-            <div style="border-bottom: 1px solid #333; height: 60px; margin: 10px 0;"></div>
-            <div style="font-size: 16px; font-weight: 700; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${order.customerName || 'Cliente'}</div>
-          </div>
-          
-          <div style="flex: 1; text-align: center;">
-            <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
-            <div style="border-bottom: 1px solid #333; height: 60px; margin: 10px 0;"></div>
-            <div style="font-size: 16px; font-weight: 700; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${settings.shopName || 'Assistência Técnica'}</div>
-          </div>
+  const signatures = `
+      <div class="signatures">
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${order.customerName || 'Cliente'}</div>
         </div>
-      </div>
-    </div>
+        
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
+        </div>
+      </div>`;
+
+  const copyContent = (copyType) => `
+      <div class="copy-container">
+        <div class="copy-type">${copyType}</div>
+        ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
+        <h1>${title}</h1>
+        ${rows}
+        ${signatures}
+      </div>`;
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: #111; }
+        .copy-container {
+          padding: 24px;
+          page-break-after: always;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        .copy-type {
+          text-align: right;
+          color: #666;
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 10px;
+          border-bottom: 2px dashed #ccc;
+          padding-bottom: 8px;
+        }
+        h1 { margin: 12px 0 10px; font-size: 22px; }
+        .shop {
+          text-align: left;
+          margin-bottom: 14px;
+          font-size: 18px;
+        }
+        .shop-name {
+          font-weight: 800;
+          font-size: 22px;
+          letter-spacing: 0.2px;
+        }
+        .shop-line { color: #333; font-size: 18px; }
+        .row { margin-bottom: 10px; }
+        .label { display: inline-block; width: 140px; font-weight: 600; }
+        .value { color: #222; }
+        .signatures {
+          margin-top: auto;
+          padding-top: 40px;
+          display: flex;
+          flex-direction: column;
+          gap: 30px;
+        }
+        .signature-block {
+          flex: 1;
+          text-align: center;
+        }
+        .signature-line {
+          border-bottom: 1px solid #333;
+          height: 60px;
+          margin: 10px 0;
+        }
+        .signature-label {
+          font-size: 16px;
+          font-weight: 700;
+          color: #333;
+          margin-top: 5px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        @media print {
+          .copy-container { page-break-after: always; }
+          body { padding: 0; }
+        }
+      </style>
+    </head>
+    <body>
+      ${copyContent('Cópia Loja')}
+      ${copyContent('Cópia Cliente')}
+    </body>
+    </html>
   `;
 
-  // Criar elemento temporário para impressão
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = printContent;
-  document.body.appendChild(tempDiv);
-  
-  // Mostrar elemento e imprimir
-  const printWrapper = document.getElementById('print-content-wrapper');
-  printWrapper.style.display = 'block';
-  printWrapper.style.position = 'relative';
-  printWrapper.style.left = '0';
+  const printWindow = window.open('', '', 'width=800,height=600');
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
   
   setTimeout(() => {
-    window.print();
-    // Remover após impressão
-    setTimeout(() => {
-      document.body.removeChild(tempDiv);
-    }, 100);
-  }, 100);
+    printWindow.print();
+    printWindow.close();
+  }, 250);
 }
 
 function statusChip(status) {
@@ -477,6 +549,14 @@ function clearForm() {
   els.form.reset();
   formFields.price.dataset.raw = 0;
   formFields.cost.dataset.raw = 0;
+  updateCustomerPhotoPreview(DEFAULT_PROFILE_PHOTO);
+}
+
+function updateCustomerPhotoPreview(photoSrc) {
+  const preview = document.getElementById('customerPhotoPreview');
+  if (preview) {
+    preview.src = photoSrc || DEFAULT_PROFILE_PHOTO;
+  }
 }
 
 function openScreen(target) {
@@ -511,6 +591,8 @@ function openForm(editOrder) {
     formatCurrencyInput(formFields.cost);
     formatPhoneInput(formFields.phone);
     formFields.notes.value = editOrder.notes;
+    formFields.customerPhotoFile.value = '';
+    updateCustomerPhotoPreview(editOrder.customerPhoto || DEFAULT_PROFILE_PHOTO);
   } else {
     clearForm();
   }
@@ -736,6 +818,7 @@ async function handleSubmit(event) {
     price: parseCurrency(formFields.price.value),
     cost: parseCurrency(formFields.cost.value),
     notes: formFields.notes.value.trim(),
+    customerPhoto: '',
   };
 
   if (!data.customerName || !data.device || !data.issue) {
@@ -743,14 +826,27 @@ async function handleSubmit(event) {
     return;
   }
 
+  // Handle customer photo
+  const photoFile = formFields.customerPhotoFile.files?.[0];
+  if (photoFile) {
+    if (photoFile.size > 1024 * 1024) {
+      await alertModal('A imagem da foto deve ter no máximo 1MB.');
+      return;
+    }
+    data.customerPhoto = await readFileAsDataUrl(photoFile);
+  }
+
   const orders = loadOrders();
   if (editingId) {
     const now = new Date().toISOString();
+    const currentOrder = orders.find(o => o.id === editingId);
+    const photo = data.customerPhoto || currentOrder.customerPhoto || '';
     const updated = orders.map((o) =>
       o.id === editingId
         ? {
             ...o,
             ...data,
+            customerPhoto: photo,
             price: data.price,
             cost: data.cost,
             updatedAt: now,
@@ -798,7 +894,7 @@ function readFileAsDataUrl(file) {
 function renderSettings() {
   const settings = loadSettings();
   // Display in profile
-  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_LOGO;
+  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_PROFILE_PHOTO;
   els.profileElements.name.textContent = settings.shopName || 'Nome da Loja';
   els.profileElements.address.textContent = settings.shopAddress || 'Endereço';
   els.profileElements.phone.textContent = settings.shopPhone ? formatPhoneDigits(settings.shopPhone) : '-';
@@ -1001,6 +1097,19 @@ function bindEvents() {
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
   els.settingsFields.shopPhone.addEventListener('input', () => formatPhoneInput(els.settingsFields.shopPhone));
   els.settingsFields.shopPhone.addEventListener('blur', () => formatPhoneInput(els.settingsFields.shopPhone));
+  
+  // Event listener for customer photo preview
+  formFields.customerPhotoFile.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        updateCustomerPhotoPreview(dataUrl);
+      } catch (error) {
+        console.error('Erro ao ler imagem:', error);
+      }
+    }
+  });
 }
 
 function start() {
@@ -1019,5 +1128,3 @@ function setPendingStatus(status) {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
 }
-
-

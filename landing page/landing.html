@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AddevOS - Gestão de Ordens de Serviço para Assistências Técnicas</title>
+  <meta name="description" content="Plataforma SaaS para gerenciar ordens de serviço, contato com clientes e financeiro. Comece grátis!">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #5967ff;
+      --primary-dark: #0c0b44;
+      --accent: #25d366;
+      --accent-light: #e8f5e9;
+      --text: #1b1d24;
+      --text-light: #6b7080;
+      --bg: #f7f8fc;
+      --bg-alt: #ffffff;
+      --border: #e5e7eb;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(12, 11, 68, 0.1);
+      --shadow-lg: 0 20px 60px rgba(12, 11, 68, 0.15);
+    }
+
+    body {
+      font-family: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    i{
+        color: #ffffff;
+    }
+
+    #iconeGratis{
+        color: #5967ff;
+    }
+
+
+    /* HEADER/NAVBAR */
+    header {
+      background: var(--bg-alt);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      height: 70px;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: none;
+      gap: 40px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .cta-button {
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      color: white;
+      padding: 12px 28px;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(89, 103, 255, 0.4);
+    }
+
+    .cta-button-ghost {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+
+    .cta-button-ghost:hover {
+      background: rgba(89, 103, 255, 0.05);
+    }
+
+    /* HERO SECTION */
+    .hero {
+      padding: 80px 0;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+
+    .hero .highlight {
+      background: linear-gradient(120deg, var(--primary) 0%, #25d366 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: clamp(16px, 3vw, 20px);
+      color: var(--text-light);
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 60px;
+    }
+
+    .hero-image {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      margin-top: 40px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hero-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* STATS */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      text-align: center;
+      padding: 40px 0;
+      margin: 60px 0;
+    }
+
+    .stat-item h3 {
+      font-size: 32px;
+      color: var(--primary);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .stat-item p {
+      color: var(--text-light);
+      font-size: 14px;
+    }
+
+    /* FEATURES */
+    .features {
+      padding: 100px 0;
+      background: var(--bg-alt);
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+    }
+
+    .section-header p {
+      color: var(--text-light);
+      font-size: 16px;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: var(--bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      transition: all 0.3s;
+      text-align: center;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: var(--shadow);
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      margin: 0 auto 20px;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+
+    .feature-card p {
+      color: var(--text-light);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* PRICING */
+    .pricing {
+      padding: 100px 0;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 30px;
+      margin-top: 50px;
+      justify-items: center;
+    }
+
+    .pricing-card {
+      background: var(--bg-alt);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .pricing-card.featured::before {
+      content: 'RECOMENDADO';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      color: white;
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .plan-name {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+
+    .plan-price {
+      font-size: 44px;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 20px 0;
+    }
+
+    .plan-price small {
+      font-size: 16px;
+      color: var(--text-light);
+    }
+
+    .plan-description {
+      color: var(--text-light);
+      font-size: 14px;
+      margin-bottom: 30px;
+      min-height: 40px;
+    }
+
+    .plan-features {
+      text-align: left;
+      margin-bottom: 30px;
+      list-style: none;
+    }
+
+    .plan-features li {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-light);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+    }
+
+    .plan-features li:before {
+      content: '✓';
+      color: var(--accent);
+      font-weight: 700;
+      margin-right: 12px;
+      font-size: 16px;
+    }
+
+    .plan-features li.unavailable {
+      color: #ccc;
+    }
+
+    .plan-features li.unavailable:before {
+      content: '✕';
+      color: #999;
+    }
+
+    .pricing-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+    }
+
+    /* TESTIMONIALS */
+    .testimonials {
+      padding: 100px 0;
+      background: var(--bg-alt);
+    }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      margin-top: 50px;
+    }
+
+    .testimonial-card {
+      background: var(--bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      border-left: 4px solid var(--primary);
+    }
+
+    .testimonial-quote {
+      color: var(--text);
+      font-size: 15px;
+      margin-bottom: 20px;
+      font-style: italic;
+      line-height: 1.8;
+    }
+
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .testimonial-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+    }
+
+    .testimonial-info h4 {
+      font-size: 14px;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .testimonial-info p {
+      font-size: 12px;
+      color: var(--text-light);
+    }
+
+    /* CTA SECTION */
+    .cta-final {
+      padding: 80px 0;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      color: white;
+      border-radius: 20px;
+      margin: 100px 0;
+    }
+
+    .cta-final h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      margin-bottom: 20px;
+    }
+
+    .cta-final p {
+      font-size: 18px;
+      margin-bottom: 30px;
+      opacity: 0.9;
+    }
+
+    .cta-final .cta-button {
+      background: white;
+      color: var(--primary);
+      font-weight: 700;
+      font-size: 16px;
+      padding: 16px 40px;
+    }
+
+    .cta-final .cta-button:hover {
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--primary-dark);
+      color: white;
+      padding: 60px 0 20px;
+    }
+
+    footer .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+
+    footer h4 {
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    footer ul {
+      list-style: none;
+    }
+
+    footer li {
+      margin-bottom: 12px;
+    }
+
+    footer a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    footer a:hover {
+      color: white;
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* FAQ */
+    .faq {
+      padding: 100px 0;
+    }
+
+    .faq-container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .faq-item {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      padding: 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      color: var(--primary-dark);
+      transition: background 0.2s;
+    }
+
+    .faq-question:hover {
+      background: var(--bg);
+    }
+
+    .faq-answer {
+      padding: 0px 20px;
+      color: var(--text-light);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 500px;
+    }
+
+    .faq-icon {
+      font-size: 20px;
+      transition: transform 0.3s;
+    }
+
+    .faq-item.active .faq-icon {
+      transform: rotate(180deg);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav {
+        gap: 20px;
+        padding: 15px 0;
+        height: auto;
+      }
+
+      .hero {
+        padding: 60px 0;
+      }
+
+      .features {
+        padding: 60px 0;
+      }
+
+      .pricing {
+        padding: 60px 0;
+      }
+
+      .pricing-card.featured {
+        transform: scale(1);
+      }
+
+      .hero-cta {
+        flex-direction: column;
+      }
+
+      .hero-cta .cta-button {
+        width: 100%;
+      }
+
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        padding: 20px;
+      }
+
+      .section-header h2 {
+        font-size: 28px;
+      }
+
+      .cta-final {
+        padding: 50px 20px;
+        margin: 50px 0;
+      }
+
+      footer .container {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .nav-links {
+        display: flex;
+      }
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s;
+    }
+
+    .modal.show {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: white;
+      padding: 40px;
+      border-radius: var(--radius);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      animation: slideDown 0.3s;
+    }
+
+    .modal-content h2 {
+      color: var(--primary-dark);
+      margin-bottom: 16px;
+      font-size: 28px;
+    }
+
+    .modal-content p {
+      color: var(--text-light);
+      margin-bottom: 30px;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .modal-close {
+      background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+
+    .modal-close:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(89, 103, 255, 0.4);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header>
+    <div class="container">
+      <nav>
+        <div class="logo">
+            <a href="landing.html">
+                <img src="logo.png" alt="logo empresa" height="60px" style="padding-top: 10px;">
+            </a>
+        </div>
+        <ul class="nav-links">
+          <li><a href="#features">FEATURES</a></li>
+          <li><a href="#pricing">PPREÇOS</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <a href="#testeGratisSection" class="cta-button">Teste Grátis Agora</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+        <img src="imagem hero pagina gerador de OS.png" alt="imagem sistema hero" width="100%" style="max-width: 800px;">
+      <h1>Gerencie suas <span class="highlight">Ordens de Serviço</span> com Facilidade</h1>
+      <p>Plataforma completa para assistências técnicas. Organize seu trabalho, imprima e armazene online suas ordens de serviço, comunique com clientes e controle seu financeiro em um só lugar.</p>
+      <div class="hero-cta">
+        <a href="#pricing" class="cta-button">Ver Plano Sem Limite</a>
+        <a href="#testeGratisSection" class="cta-button cta-button-ghost">Teste Gratis →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-header">
+        <h2>Tudo que você Precisa</h2>
+        <p>Funcionalidades poderosas e intuitivas para gerenciar sua assistência técnica</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-address-book"></i></div>
+          <h3>Ordens de Serviço</h3>
+          <p>Crie, edite e organize suas OS com status em tempo real. Em papelada ou digital.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-comment-dots"></i></div>
+          <h3>Contato Direto</h3>
+          <p>Envie mensagens pelo WhatsApp ou faça chamadas diretas para seus clientes com um clique.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-money-check-dollar"></i></div>
+          <h3>Controle Financeiro</h3>
+          <p>Acompanhe receita, custos e lucros. Relatórios claros do seu desempenho.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-users"></i></div>
+          <h3>Múltiplos Usuários</h3>
+          <p>Convide técnicos e gerentes. Controle de permissões por role.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+          <h3>Mobile First</h3>
+          <p>Funciona perfeitamente em smartphones, tablets e computadores.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-file-shield"></i></div>
+          <h3>Segurança</h3>
+          <p>Seus dados protegidos na nuvem com autenticação de dois fatores.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-gauge-high"></i></div>
+          <h3>Rápido e Confiável</h3>
+          <p>Sincronização em tempo real. Sem demoras, tudo agora.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon"><i class="fa-solid fa-headset"></i></div>
+          <h3>Suporte 24/7</h3>
+          <p>Time pronto para ajudar quando você precisar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="pricing">
+    <div class="container">
+      <div class="section-header">
+        <h2>Um Único Plano, Sem Limites</h2>
+        <p>Tudo ilimitado a um preço justo. Sem contratos, cancele quando quiser.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- PLANO ÚNICO -->
+        <div class="pricing-card featured" style="max-width: 500px; margin: 0 auto;">
+          <div class="plan-name">Uso Ilimitado</div>
+          <div class="plan-price">R$ 39,90<small>/mês</small></div>
+          <div class="plan-description">Perfeito para assistências de qualquer tamanho</div>
+          
+          <ul class="plan-features">
+            <li>Usuários Ilimitados</li>
+            <li>Ordens de Serviço Ilimitadas</li>
+            <li>Contato com Clientes (WhatsApp + Telefone)</li>
+            <li>Controle Financeiro, Custo e Lucro</li>
+            <li>Historico de servicos e Orden de Servico</li>
+            <li>Sincronização em Tempo Real</li>
+            <li>OS Impressa e Digital</li>
+            <li>Suporte por WhatsApp</li>
+            <li>Sem Taxas Adicionais</li>
+          </ul>
+
+          <a href="#signup" class="cta-button" style="width: 100%;">Começar R$ 39,90</a>
+          <p style="text-align: center; font-size: 13px; color: var(--text-light); margin-top: 15px;">Teste <strong>gratis</strong> logo a baixo!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTE DO SISTEMA -->
+  <section style="background: linear-gradient(135deg, #f0f4ff 0%, #f9f7ff 100%); padding: 80px 0;" id="testeGratisSection">
+    <div class="container">
+      <div class="section-header">
+        <h2>Teste Gratuito Agora</h2>
+        <p>Experimente o sistema completo sem compromisso. Teste totalmente limpo, sem persistência de dados.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 50px;">
+        <!-- CARD 1 -->
+        <div style="background: white; padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 15px;"><i class="fa-solid fa-vial-circle-check" id="iconeGratis"></i></div>
+          <h3 style="margin-bottom: 10px; font-size: 18px; font-weight: 600;">Teste Limpo</h3>
+          <p style="color: var(--text-light); font-size: 14px;">Acesse <a href="index.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">a aplicação de teste</a> e experimente todos os recursos. Sem limite de tempo.</p>
+        </div>
+
+        <!-- CARD 2 -->
+        <div style="background: white; padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 15px;"><i class="fa-solid fa-trash-can" id="iconeGratis"></i></div>
+          <h3 style="margin-bottom: 10px; font-size: 18px; font-weight: 600;">Nenhum Dado Salvo</h3>
+          <p style="color: var(--text-light); font-size: 14px;">Ao sair da página de teste, todos os dados são descartados. Sem banco de dados, sem perfis persistentes. Sempre limpo.</p>
+        </div>
+
+        <!-- CARD 3 -->
+        <div style="background: white; padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 15px;"><i class="fa-solid fa-file-pen" id="iconeGratis"></i></div>
+          <h3 style="margin-bottom: 10px; font-size: 18px; font-weight: 600;">Sem Alterações</h3>
+          <p style="color: var(--text-light); font-size: 14px;">Nada é alterado no seu sistema. Teste isolado, seguro, sem riscos. Depois, contrate e sincronize tudo na nuvem.</p>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 50px;">
+        <p style="font-size: 16px; margin-bottom: 20px; color: var(--text);">
+          <strong>Click a baixo e teste nosso sistema</strong> neste sistema de teste gratuito nao podera editar informacoes
+        </p>
+        <a href="#pricing" class="cta-button">Testar Gratis</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <h2>O que Nossos Clientes Dizem</h2>
+        <p>Histórias reais de assistências que transformaram seus negócios</p>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <div class="testimonial-quote">"Reduzi o tempo de burocracia em 80%. Meus técnicos ganham mais tempo para trabalhar com clientes."</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">JS</div>
+            <div class="testimonial-info">
+              <h4>João Silva</h4>
+              <p>Assistência Silva, São Paulo</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-quote">"O controle financeiro ficou muito mais claro. Agora sei exatamente quanto estou ganhando por dia."</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">MO</div>
+            <div class="testimonial-info">
+              <h4>Maria Oliveira</h4>
+              <p>Tech Plus, Rio de Janeiro</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-quote">"Meus clientes amam a facilidade de entrar em contato via WhatsApp. Aumentou minha satisfação em 90%."</div>
+          <div class="testimonial-author">
+            <div class="testimonial-avatar">CF</div>
+            <div class="testimonial-info">
+              <h4>Carlos Ferreira</h4>
+              <p>Eletrônicos Ferreira, Minas Gerais</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="faq">
+    <div class="container">
+      <div class="section-header" style="margin-bottom: 50px;">
+        <h2>Dúvidas Frequentes</h2>
+        <p>Respostas rápidas para suas perguntas</p>
+      </div>
+
+      <div class="faq-container">
+        <div class="faq-item active">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Há versão gratuita?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            Sim! Você pode testar o sistema completamente grátis. Acesse a versão de teste para experimentar todos os recursos sem nenhuma limitação. Depois, contrate por R$ 39,90/mês para usar em produção.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Como funciona a sincronização?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            Todos os seus dados são salvos na nuvem em tempo real. Se você criar uma OS no celular, ela aparece instantaneamente no computador. A sincronização funciona no plano pago (R$ 39,90/mês).
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Quantos usuários posso adicionar?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            No plano Uso Ilimitado (R$ 39,90/mês): você pode adicionar usuários ilimitados. Perfeito para qualquer tamanho de assistência, desde 1 técnico até times grandes.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Meus dados estão seguros?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            Sim! Usamos Firebase do Google com criptografia de ponta a ponta, backup automático e conformidade com LGPD. No plano pago, seus dados estão 100% sincronizados e protegidos.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Como funciona o teste?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            O teste é totalmente limpo e isolado. Você pode criar OS, adicionar dados, testar perfis - mas nada é salvo. Ao sair da página, tudo é descartado. Sem alterações no seu sistema.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Posso fazer backup dos meus dados?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            Sim! No plano pago, seus dados são salvos automaticamente na nuvem. Você pode também exportar tudo para CSV a qualquer momento.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-question" onclick="this.parentElement.classList.toggle('active')">
+            <span>Como cancelo minha assinatura?</span>
+            <span class="faq-icon"><i class="fa-solid fa-chevron-down" id="iconeGratis"></i></span>
+          </div>
+          <div class="faq-answer">
+            <p>Sem problemas! Você pode cancelar sua assinatura a qualquer momento nas configurações. Sem multas, sem contratos, sem taxas de cancelamento.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <div id="launchModal" class="modal">
+    <div class="modal-content">
+      <h2>🚀 Em Breve!</h2>
+      <p>A plataforma AddevOS ainda não foi lançada. Estamos trabalhando duro para trazer a melhor solução em gestão de ordens de serviço para você!</p>
+      <p>Fique atento para o lançamento em breve. Cadastre-se para receber notificações.</p>
+      <button class="modal-close" onclick="closeModal()">Entendi</button>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div>
+        <h4>AddevOS</h4>
+        <p style="color: rgba(255, 255, 255, 0.7); font-size: 14px;">Gestão de Ordens de Serviço para Assistências Técnicas.</p>
+      </div>
+
+      <div>
+        <h4>Produto</h4>
+        <ul>
+          <li><a href="#features">Features</a></li>
+          <li><a href="#pricing">Preços</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="">Blog</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Empresa</h4>
+        <ul>
+          <li><a href="">Sobre</a></li>
+          <li><a href="">Contato</a></li>
+          <li><a href="">Carreiras</a></li>
+          <li><a href="">Status</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="">Privacidade</a></li>
+          <li><a href="">Termos</a></li>
+          <li><a href="">LGPD</a></li>
+          <li><a href="">Segurança</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 AddevOS. Todos os direitos reservados. Desenvolvido com ❤️ para assistências técnicas.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Smooth scroll para links internos
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Função para abrir modal
+    function openModal() {
+      document.getElementById('launchModal').classList.add('show');
+    }
+
+    // Função para fechar modal
+    function closeModal() {
+      document.getElementById('launchModal').classList.remove('show');
+    }
+
+    // Fechar modal ao clicar fora do conteúdo
+    window.onclick = function(event) {
+      const modal = document.getElementById('launchModal');
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+
+    // Rastrear cliques em CTA buttons
+    document.querySelectorAll('.cta-button').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        openModal();
+      });
+    });
+  </script>
+</body>
+</html>
