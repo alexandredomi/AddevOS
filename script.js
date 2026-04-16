@@ -377,83 +377,134 @@ function printOrder(order, title = 'Ordem de Serviço') {
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; color: #111; }
-        .copy-container {
-          padding: 24px;
-          page-break-after: always;
+        .print-page {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          width: 100%;
           min-height: 100vh;
+          padding: 8px;
+          background: #fff;
+        }
+        .copy-container {
+          padding: 16px;
           display: flex;
           flex-direction: column;
+          border: 1px solid #ddd;
+          page-break-inside: avoid;
+          min-height: 50vh;
         }
         .copy-type {
           text-align: right;
           color: #666;
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 600;
-          margin-bottom: 10px;
+          margin-bottom: 8px;
           border-bottom: 2px dashed #ccc;
-          padding-bottom: 8px;
+          padding-bottom: 4px;
         }
-        h1 { margin: 12px 0 10px; font-size: 22px; }
+        h1 { margin: 8px 0 6px; font-size: 18px; }
         .shop {
           text-align: left;
-          margin-bottom: 14px;
-          font-size: 18px;
+          margin-bottom: 8px;
+          font-size: 14px;
         }
         .shop-name {
           font-weight: 800;
-          font-size: 22px;
+          font-size: 16px;
           letter-spacing: 0.2px;
         }
-        .shop-line { color: #333; font-size: 18px; }
-        .row { margin-bottom: 10px; }
-        .label { display: inline-block; width: 140px; font-weight: 600; }
+        .shop-line { color: #333; font-size: 12px; }
+        .row { margin-bottom: 6px; font-size: 12px; }
+        .label { display: inline-block; width: 100px; font-weight: 600; }
         .value { color: #222; }
         .signatures {
           margin-top: auto;
-          padding-top: 40px;
+          padding-top: 12px;
           display: flex;
           flex-direction: column;
-          gap: 30px;
+          gap: 12px;
         }
         .signature-block {
           flex: 1;
           text-align: center;
         }
+        .signature-block p {
+          font-weight: 600;
+          font-size: 11px;
+          margin-bottom: 3px;
+        }
         .signature-line {
           border-bottom: 1px solid #333;
-          height: 60px;
-          margin: 10px 0;
+          height: 35px;
+          margin: 4px 0;
         }
         .signature-label {
-          font-size: 16px;
+          font-size: 10px;
           font-weight: 700;
           color: #333;
-          margin-top: 5px;
+          margin-top: 2px;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        @media print {
-          .copy-container { page-break-after: always; }
-          body { padding: 0; }
+          letter-spacing: 0.3px;
         }
       </style>
     </head>
     <body>
-      ${copyContent('Cópia Loja')}
-      ${copyContent('Cópia Cliente')}
+      <div class="print-page">
+        ${copyContent('Cópia Loja')}
+        ${copyContent('Cópia Cliente')}
+      </div>
     </body>
     </html>
   `;
 
-  const printWindow = window.open('', '', 'width=800,height=600');
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
+  // Criar iframe para impressão (funciona em mobile)
+  const iframe = document.createElement('iframe');
+  iframe.id = 'print-iframe-' + Date.now();
+  iframe.style.display = 'none';
+  iframe.style.position = 'absolute';
+  iframe.style.left = '-9999px';
+  document.body.appendChild(iframe);
   
-  setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 250);
+  try {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
+    
+    // Aguardar carregamento do conteúdo
+    iframe.onload = function() {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error('Erro ao imprimir:', e);
+      }
+      
+      // Remover iframe após um tempo
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    };
+    
+    // Fallback se onload não disparar
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error('Erro ao imprimir (fallback):', e);
+      }
+      if (document.body.contains(iframe)) {
+        document.body.removeChild(iframe);
+      }
+    }, 500);
+  } catch (e) {
+    console.error('Erro ao criar iframe de impressão:', e);
+    if (document.body.contains(iframe)) {
+      document.body.removeChild(iframe);
+    }
+  }
 }
 
 function statusChip(status) {
