@@ -165,18 +165,47 @@ function createOrderObject({
 }
 
 function formatCurrency(value) {
-  return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const num = Number(value);
+  return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
 function parseCurrency(str) {
   if (!str) return 0;
-  const digits = str.toString().replace(/\D/g, '');
-  return digits ? Number(digits) / 100 : 0;
+  // Remove "R$", espaços e símbolos de moeda
+  const cleaned = str.replace(/[^\d,.-]/g, '').trim();
+  if (!cleaned) return 0;
+  // Substituir ponto de milhar e vírgula decimal
+  const normalized = cleaned.replace(/\./g, '').replace(',', '.');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+function formatCurrencyInputLive(input) {
+  // Remove tudo que não é número
+  let value = input.value.replace(/\D/g, '');
+  
+  if (!value) {
+    input.value = '';
+    input.dataset.raw = 0;
+    return;
+  }
+  
+  // Converte para número (centavos)
+  const num = parseInt(value, 10);
+  const realValue = num / 100;
+  
+  // Formata para exibição
+  input.value = realValue.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  
+  input.dataset.raw = realValue;
 }
 
 function formatCurrencyInput(input) {
   const num = parseCurrency(input.value);
-  input.value = num ? formatCurrency(num) : '';
+  input.value = num > 0 ? formatCurrency(num) : '';
   input.dataset.raw = num;
 }
 
@@ -513,7 +542,7 @@ function openForm(editOrder) {
     formFields.phone.value = editOrder.phone || '';
     formFields.device.value = editOrder.device;
     formFields.issue.value = editOrder.issue;
-    formFields.price.value = editOrder.price;
+    formFields.price.value = editOrder.price || 0;
     formFields.cost.value = editOrder.cost || 0;
     formatCurrencyInput(formFields.price);
     formatCurrencyInput(formFields.cost);
@@ -566,6 +595,11 @@ function openDetail(id) {
       <button data-action="status" data-status="Em andamento" class="filter-btn">Em andamento</button>
       <button data-action="status" data-status="Finalizado" class="filter-btn">Finalizar</button>
     </div>
+    <div class="detail-actions contact-row">
+      <strong class="group-title">Contato</strong>
+      <button data-action="whatsapp" class="whatsapp-btn icon-btn">WhatsApp</button>
+      <button data-action="call" class="call-btn icon-btn">Ligar</button>
+    </div>
     <div class="detail-actions action-row">
       <strong class="group-title">Ações</strong>
       <button data-action="edit" class="primary-btn icon-btn">Editar</button>
@@ -613,6 +647,86 @@ async function handleDetailAction(id, dataset) {
     if (order) {
       printOrder(order, 'Detalhes da OS');
     }
+  }
+  if (dataset.action === 'whatsapp') {
+    const order = loadOrders().find((o) => o.id === id);
+    if (order) {
+      handleWhatsAppContact(order);
+    }
+  }
+  if (dataset.action === 'call') {
+    const order = loadOrders().find((o) => o.id === id);
+    if (order) {
+      handlePhoneCall(order.phone);
+    }
+  }
+}
+
+/**
+ * Contatar cliente via WhatsApp com mensagem pré-pronta
+ */
+function handleWhatsAppContact(order) {
+  if (!order.phone) {
+    alertModal('Telefone do cliente não cadastrado');
+    return;
+  }
+
+  // Limpar número para o padrão internacional
+  const phoneNumber = parsePhone(order.phone);
+  
+  if (!phoneNumber) {
+    alertModal('Número de telefone inválido');
+    return;
+  }
+
+  // Obter nome da assistência (do settings ou padrão)
+  const settings = loadSettings();
+  const shopName = settings.shopName || 'Assistência';
+
+  // Criar mensagem simples
+  const message = `Olá ${order.customerName}, aqui é da assistência ${shopName} referente a seu aparelho ${order.device}`;
+
+  // Codificar mensagem para URL
+  const encodedMessage = encodeURIComponent(message);
+  
+  // Número com código +55 (Brasil)
+  const whatsappNumber = phoneNumber.startsWith('55') ? phoneNumber : '55' + phoneNumber;
+  
+  // Link do WhatsApp
+  const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+  
+  // Abrir em nova aba
+  window.open(whatsappURL, '_blank');
+}
+
+/**
+ * Fazer ligação direta para o cliente
+ */
+function handlePhoneCall(phone) {
+  if (!phone) {
+    alertModal('Telefone do cliente não cadastrado');
+    return;
+  }
+
+  const phoneNumber = parsePhone(phone);
+  
+  if (!phoneNumber) {
+    alertModal('Número de telefone inválido');
+    return;
+  }
+
+  // Verificar se está em um dispositivo que suporta ligações
+  if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+    // Mobile - fazer ligação direta
+    window.location.href = `tel:+55${phoneNumber}`;
+  } else {
+    // Desktop - copiar número para clipboard e mostrar aviso
+    const fullNumber = `+55${phoneNumber}`;
+    navigator.clipboard.writeText(fullNumber).then(() => {
+      alertModal(`Número copiado para área de transferência:\n${fullNumber}\n\nFaça a ligação usando seu telefone.`);
+    }).catch(() => {
+      alertModal(`Para ligar:\n+55${phoneNumber}`);
+    });
   }
 }
 
@@ -917,7 +1031,7 @@ function bindEvents() {
     btn.addEventListener('click', () => openScreen('listView'))
   );
   [formFields.price, formFields.cost].forEach((field) => {
-    field.addEventListener('input', () => formatCurrencyInput(field));
+    field.addEventListener('input', () => formatCurrencyInputLive(field));
     field.addEventListener('blur', () => formatCurrencyInput(field));
   });
   formFields.phone.addEventListener('input', () => formatPhoneInput(formFields.phone));
@@ -929,9 +1043,6 @@ function bindEvents() {
 function start() {
   loadOrders();
   loadSettings();
-  formatCurrencyInput(formFields.price);
-  formatCurrencyInput(formFields.cost);
-  formatPhoneInput(formFields.phone);
   bindEvents();
   initNavigation();
   renderOrders();

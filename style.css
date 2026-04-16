@@ -282,11 +282,28 @@ input:focus, textarea:focus {
   inset: 0;
   z-index: 998;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   padding: 16px;
-  background: rgba(12, 11, 68, 0.22);
-  backdrop-filter: blur(4px);
+  background: rgba(12, 11, 68, 0.4);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(8px); }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .settings-form.hidden {
@@ -509,6 +526,39 @@ input:focus, textarea:focus {
   color: #ff8b8b;
   border: 1px solid rgba(255,0,0,0.15);
 }
+.detail-actions.contact-row {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(12,11,68,0.08);
+}
+.detail-actions .whatsapp-btn {
+  background: linear-gradient(135deg, #25d366 0%, #20ba5c 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.detail-actions .whatsapp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(37, 211, 102, 0.4);
+}
+.detail-actions .whatsapp-btn:active {
+  transform: translateY(0);
+}
+.detail-actions .call-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.detail-actions .call-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(76, 175, 80, 0.4);
+}
+.detail-actions .call-btn:active {
+  transform: translateY(0);
+}
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -540,6 +590,9 @@ input:focus, textarea:focus {
 .action-row [data-action="edit"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="m15.728 3.293 4.979 4.98-9.9 9.9-4.978-4.98Zm-7.07 10.242 2.121 2.122 1.414-1.415-2.12-2.12Zm10.606-6.364-2.122-2.121-1.414 1.414 2.12 2.12ZM4 19h16v2H4Z"/></svg>'); }
 .action-row [data-action="print"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M7 3h10v4H7Zm-1 6h12a3 3 0 0 1 3 3v5h-4v-3H7v3H3v-5a3 3 0 0 1 3-3Zm1 2a1 1 0 1 0 0 2h10a1 1 0 1 0 0-2Z"/></svg>'); }
 .action-row [data-action="delete"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9 4h6l1 2h4v2H4V6h4Zm-1 4h2v10H8Zm6 0h2v10h-2ZM6 8h12l-.8 12.4a2 2 0 0 1-2 1.6H8.8a2 2 0 0 1-2-1.6Z"/></svg>'); }
+.contact-row [data-action="whatsapp"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.955 1.23l-.355.184-.368-.093 1.398-5.101a.5.5 0 00-.061-.46 9.993 9.993 0 0114.869 7.5c0 5.522-4.477 10-10 10a9.954 9.954 0 01-5.064-1.371l-.356-.187-.368.092 1.401 5.102a.5.5 0 00.61.396 10 10 0 008.777-17.57z"/></svg>'); }
+.contact-row [data-action="call"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M17.92 7.02C19.97 9.29 21.5 12.09 21.5 15.5 21.5 19.96 19.45 23.85 16.02 26.35 15.36 26.89 14.38 26.41 14.63 25.6 15.77 21.91 16.5 18.43 16.5 15.5 16.5 12.57 15.77 9.09 14.63 5.4 14.37 4.59 15.36 4.11 16.02 4.65M1 3v18h15.03c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3H1m4 9h8v2H5z"/></svg>'); }
+
 
 .modal-overlay {
   position: fixed;
@@ -573,21 +626,187 @@ input:focus, textarea:focus {
   gap: 10px;
 }
 .settings-form .form-card {
-  width: min(680px, 100%);
-  max-height: calc(100vh - 32px);
-  margin-top: 0;
+  width: min(620px, calc(100% + 32px));
+  max-height: min(90vh, calc(100vh - 60px));
+  margin: 0 -16px;
   overflow-y: auto;
+  background: var(--bg-alt);
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -8px 32px rgba(12, 11, 68, 0.16);
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .settings-form {
+    align-items: center;
+  }
+  
+  .settings-form .form-card {
+    width: min(620px, calc(100% - 32px));
+    margin: 0;
+    border-radius: 20px;
+  }
+}
+
+.settings-form .form-card > * {
+  padding: 0 24px;
+}
+
+.settings-form .form-card > :first-child {
+  padding-top: 28px;
+}
+
+.settings-form .form-card > :last-child {
+  padding-bottom: 24px;
 }
 
 .settings-form .form-grid {
   grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 16px 24px 0 !important;
 }
+
+.settings-form .form-grid label {
+  padding: 14px;
+  gap: 8px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fafbfd 0%, #f5f7fc 100%);
+  border: 1.5px solid rgba(89, 103, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.settings-form .form-grid label:focus-within {
+  border-color: var(--primary);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfd 100%);
+  box-shadow: 0 8px 20px rgba(89, 103, 255, 0.12);
+}
+
+.settings-form .form-grid input,
+.settings-form .form-grid textarea {
+  font-size: 16px;
+  padding: 12px;
+}
+
+.settings-form .form-grid input[type="file"] {
+  padding: 10px 0;
+}
+
 .settings-form .form-actions {
-  justify-content: flex-end;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px 24px 24px !important;
+  border-top: 1px solid rgba(12, 11, 68, 0.05);
 }
+
+.settings-form .form-actions button {
+  flex: 1;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.settings-form .ghost-btn {
+  background: transparent;
+  color: var(--muted);
+  border: 2px solid rgba(12, 11, 68, 0.1);
+}
+
+.settings-form .ghost-btn:active {
+  background: rgba(12, 11, 68, 0.05);
+  transform: scale(0.98);
+}
+
+.settings-form .primary-btn {
+  background: linear-gradient(135deg, var(--primary) 0%, #7c88ff 100%);
+  color: #fff;
+}
+
+.settings-form .primary-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 6px 16px rgba(89, 103, 255, 0.4);
+}
+
+.form-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 24px 16px !important;
+  border-bottom: 1px solid rgba(12, 11, 68, 0.05);
+  margin-bottom: 0;
+}
+
+.form-header h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: var(--primary-strong);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.form-header p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.form-header .close-settings {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 20px;
+  color: var(--muted);
+  transition: all 0.2s ease;
+}
+
+.form-header .close-settings:active {
+  background: rgba(12, 11, 68, 0.08);
+  transform: scale(0.95);
+}
+
+@media (max-width: 480px) {
+  .form-header {
+    padding: 20px 16px 12px !important;
+  }
+
+  .form-header h2 {
+    font-size: 20px;
+  }
+
+  .settings-form .form-grid {
+    padding: 12px 16px 0 !important;
+  }
+
+  .settings-form .form-card > * {
+    padding: 0 16px;
+  }
+
+  .settings-form .form-actions {
+    padding: 16px 16px 20px !important;
+    flex-direction: column-reverse;
+  }
+
+  .settings-form .form-actions button {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}
+
 .settings-form input[disabled] {
   background: #f2f3f7;
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .finance-grid {
