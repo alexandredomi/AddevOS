@@ -617,9 +617,6 @@ function openDetail(id) {
 
   els.detailContent.innerHTML = `
     <div class="detail-grid">
-      <div style="grid-column: 1 / -1; text-align: center; margin-bottom: 15px;">
-        <img src="${order.customerPhoto || DEFAULT_PROFILE_PHOTO}" alt="${order.customerName}" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-      </div>
       <div><strong>Cliente:</strong> ${order.customerName}</div>
       <div><strong>Telefone:</strong> ${order.phone ? formatPhoneDigits(order.phone) : '-'}</div>
       <div><strong>Aparelho:</strong> ${order.device}</div>
@@ -897,7 +894,7 @@ function readFileAsDataUrl(file) {
 function renderSettings() {
   const settings = loadSettings();
   // Display in profile
-  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_LOGO;
+  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_PROFILE_PHOTO;
   els.profileElements.name.textContent = settings.shopName || 'Nome da Loja';
   els.profileElements.address.textContent = settings.shopAddress || 'Endereço';
   els.profileElements.phone.textContent = settings.shopPhone ? formatPhoneDigits(settings.shopPhone) : '-';
