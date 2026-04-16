@@ -1056,5 +1056,3 @@ function setPendingStatus(status) {
     btn.classList.toggle('active', btn.dataset.status === status);
   });
 }
-
-
