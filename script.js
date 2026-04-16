@@ -344,6 +344,30 @@ function printOrder(order, title = 'Ordem de Serviço') {
     )
     .join('');
 
+  const signatures = `
+      <div class="signatures">
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${order.customerName || 'Cliente'}</div>
+        </div>
+        
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
+        </div>
+      </div>`;
+
+  const copyContent = (copyType) => `
+      <div class="copy-container">
+        <div class="copy-type">${copyType}</div>
+        ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
+        <h1>${title}</h1>
+        ${rows}
+        ${signatures}
+      </div>`;
+
   const html = `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -351,7 +375,24 @@ function printOrder(order, title = 'Ordem de Serviço') {
       <meta charset="UTF-8">
       <title>${title}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; color: #111; }
+        .copy-container {
+          padding: 24px;
+          page-break-after: always;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        .copy-type {
+          text-align: right;
+          color: #666;
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 10px;
+          border-bottom: 2px dashed #ccc;
+          padding-bottom: 8px;
+        }
         h1 { margin: 12px 0 10px; font-size: 22px; }
         .shop {
           text-align: left;
@@ -368,7 +409,8 @@ function printOrder(order, title = 'Ordem de Serviço') {
         .label { display: inline-block; width: 140px; font-weight: 600; }
         .value { color: #222; }
         .signatures {
-          margin-top: 40px;
+          margin-top: auto;
+          padding-top: 40px;
           display: flex;
           flex-direction: column;
           gap: 30px;
@@ -390,26 +432,15 @@ function printOrder(order, title = 'Ordem de Serviço') {
           text-transform: uppercase;
           letter-spacing: 0.5px;
         }
+        @media print {
+          .copy-container { page-break-after: always; }
+          body { padding: 0; }
+        }
       </style>
     </head>
     <body>
-      ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
-      <h1>${title}</h1>
-      ${rows}
-      
-      <div class="signatures">
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${order.customerName || 'Cliente'}</div>
-        </div>
-        
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
-        </div>
-      </div>
+      ${copyContent('Cópia Loja')}
+      ${copyContent('Cópia Cliente')}
     </body>
     </html>
   `;
