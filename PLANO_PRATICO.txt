@@ -1,0 +1,563 @@
+================================================================================
+                    PLANO PRÁTICO - AddevOS SaaS
+                        Próximos 30 Dias
+================================================================================
+
+DATA: Abril 2026
+STATUS: Pronto para Implementação
+OBJETIVO: Transformar AddevOS em SaaS com Firebase + Vue 3
+
+================================================================================
+                      ANÁLISE SITUAÇÃO ATUAL
+================================================================================
+
+✅ O QUE JÁ ESTÁ PRONTO:
+  ✓ Interface visual completa (HTML/CSS)
+  ✓ Funcionalidades de OS (criar, editar, deletar)
+  ✓ Contato com cliente (WhatsApp + Chamada)
+  ✓ Formatação de moeda funcionando
+  ✓ Modal de perfil reformulado
+  ✓ Documentação completa (Roadmap + Código)
+
+⏳ O QUE FALTA (CRÍTICO):
+  ✗ Autenticação (login/senha real)
+  ✗ Banco de dados na nuvem (Firebase)
+  ✗ Multi-tenant (múltiplos usuários por loja)
+  ✗ Sincronização em tempo real
+  ✗ Segurança (Security Rules)
+
+================================================================================
+                         DECISÃO TOMADA
+================================================================================
+
+ARQUITETURA: Vue 3 + Firebase + Pinia
+RAZÃO: Mais profissional, escalável e padrão de mercado
+
+TIMELINE: 3-4 semanas para ter versão Beta com Firebase
+CUSTO ESTIMADO: ~$0 (Firebase free tier)
+
+================================================================================
+                      SEMANA 1: SETUP FIREBASE
+                      (5-7 Dias de Trabalho)
+================================================================================
+
+OBJETIVO: Ter projeto Firebase criado, autenticação funcionando
+
+□ DIA 1-2: CRIAR PROJETO FIREBASE
+
+  TAREFAS:
+  1. Ir para https://console.firebase.google.com
+  2. Clique em "Criar Projeto"
+  3. Nome: "addevos-saas"
+  4. Google Analytics: Ativar (recomendado)
+  5. Aguardar 2-3 minutos
+
+  RESULTADO ESPERADO:
+  - Ter Project ID: addevos-saas
+  - Ter Firebase Credentials (guardar em local seguro)
+
+  TEMPO ESTIMADO: 30 minutos
+
+---
+
+□ DIA 2-3: ATIVAR SERVIÇOS FIREBASE
+
+  TAREFAS:
+  
+  A) AUTENTICAÇÃO:
+     1. Firebase Console > Authentication
+     2. "Get Started"
+     3. Ativar "Email/Password"
+     4. Ativar "Google"
+     5. Salvar
+
+  B) FIRESTORE DATABASE:
+     1. Firebase Console > Firestore Database
+     2. "Create Database"
+     3. Modo: "Start in test mode" (depois mudar regras)
+     4. Localização: us-central1
+     5. Criar
+
+  C) CLOUD STORAGE:
+     1. Firebase Console > Storage
+     2. "Get Started"
+     3. Localização: us-central1
+     4. Criar
+
+  D) OBTER CREDENCIAIS:
+     1. Project Settings (engrenagem)
+     2. "Suas Apps"
+     3. Registrar novo app Web
+     4. Copiar credenciais Firebase Config
+     5. Guardar em arquivo seguro
+
+  RESULTADO ESPERADO:
+  - Ter credenciais Firebase copiadas
+  - Todos os serviços ativos
+
+  TEMPO ESTIMADO: 1 hora
+
+---
+
+□ DIA 4-5: INSTALAR DEPENDÊNCIAS
+
+  TAREFAS:
+  1. Abrir Terminal na pasta do projeto
+  
+  2. Instalar Vue 3:
+     npm init vue@latest addvos-web
+     
+  3. Instalar Firebase:
+     npm install firebase pinia vue-router
+     
+  4. Dependências extras:
+     npm install stripe axios date-fns
+
+  RESULTADO ESPERADO:
+  - Pasta "addvos-web" criada
+  - node_modules com todas dependências
+  - Package.json atualizado
+
+  TEMPO ESTIMADO: 30 minutos (download)
+
+---
+
+□ DIA 6-7: CONFIGURAR FIREBASE SDK
+
+  TAREFAS:
+  
+  1. Criar arquivo: src/config/firebase.js
+  
+  2. Copiar código (veja IMPLEMENTACAO_CODIGO.md - seção "Setup Firebase")
+  
+  3. Preencher credenciais:
+     - apiKey
+     - projectId
+     - storageBucket
+     - Etc...
+  
+  4. Testar conexão:
+     npm run dev
+     Abrir http://localhost:5173
+
+  RESULTADO ESPERADO:
+  - App Vue rodando sem erros
+  - Conexão com Firebase funcionando
+  - Console sem erros de conexão
+
+  TEMPO ESTIMADO: 1 hora
+
+RESUMO SEMANA 1:
+  ✓ Projeto Firebase criado
+  ✓ Serviços ativos (Auth, Firestore, Storage)
+  ✓ SDK instalado e configurado
+  ✓ App Vue rodando
+
+================================================================================
+                    SEMANA 2: AUTENTICAÇÃO
+                      (5-7 Dias de Trabalho)
+================================================================================
+
+OBJETIVO: Login/Registro funcionando com Firebase Auth
+
+□ DIA 8-9: CRIAR AUTHSERVICE
+
+  TAREFAS:
+  1. Criar arquivo: src/services/authService.js
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Testar funções:
+     - signUp()
+     - signIn()
+     - signOut()
+     - signInWithGoogle()
+
+  RESULTADO ESPERADO:
+  - AuthService.js completo e testado
+  - Sem erros de sintaxe
+
+  TEMPO ESTIMADO: 2 horas
+
+---
+
+□ DIA 9-10: CRIAR AUTH STORE (PINIA)
+
+  TAREFAS:
+  1. Criar arquivo: src/stores/auth.js
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Testar states:
+     - user
+     - loading
+     - error
+     - isAuthenticated
+
+  RESULTADO ESPERADO:
+  - Store funcionando
+  - Estados gerenciados corretamente
+
+  TEMPO ESTIMADO: 1.5 horas
+
+---
+
+□ DIA 11-12: TELA DE LOGIN
+
+  TAREFAS:
+  1. Criar arquivo: src/views/Auth/Login.vue
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Criar componentes:
+     - Formulário de login
+     - Formulário de registro
+     - Botão Google Sign-In
+  4. Conectar ao AuthService
+
+  RESULTADO ESPERADO:
+  - Tela de login renderizando
+  - Formulário funcionando
+  - Botão Google visível
+
+  TEMPO ESTIMADO: 3 horas
+
+---
+
+□ DIA 13-14: ROUTER + GUARDS
+
+  TAREFAS:
+  1. Criar arquivo: src/router/index.js
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Configurar rotas:
+     - /login
+     - /dashboard
+     - /orders
+     - /users (admin)
+     - /settings (admin)
+  4. Adicionar guards de autenticação
+
+  RESULTADO ESPERADO:
+  - Router funcionando
+  - Redireciona para login se não autenticado
+  - Redireciona para dashboard se autenticado
+
+  TEMPO ESTIMADO: 2 horas
+
+---
+
+□ DIA 15: TESTAR FLUXO COMPLETO
+
+  TAREFAS:
+  1. Limpar localStorage (dev tools)
+  2. Clicar "Criar conta"
+  3. Registrar com: email@teste.com / senha123
+  4. Verificar no Firebase Console:
+     - Usuário criado em Authentication
+     - Documento criado em Firestore (users/{uid})
+     - Organização criada (organizations/{orgId})
+  5. Fazer logout
+  6. Login novamente
+  7. Fazer login com Google
+
+  RESULTADO ESPERADO:
+  - Usuário criado no Firebase
+  - Dados salvos no Firestore
+  - Fluxo de autenticação funcionando
+  - Nenhum erro no console
+
+  TEMPO ESTIMADO: 2 horas
+
+RESUMO SEMANA 2:
+  ✓ AuthService implementado
+  ✓ Auth Store (Pinia) funcionando
+  ✓ Tela de login/registro pronta
+  ✓ Router com guards configurado
+  ✓ Fluxo de autenticação testado
+
+================================================================================
+                  SEMANA 3: MIGRAR DADOS PARA FIRESTORE
+                      (5-7 Dias de Trabalho)
+================================================================================
+
+OBJETIVO: Dados de OS saindo de localStorage para Firestore
+
+□ DIA 16-17: CRIAR ORGANIZATION SERVICE
+
+  TAREFAS:
+  1. Criar arquivo: src/services/organizationService.js
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Implementar funções:
+     - getOrganization()
+     - getUserOrganizations()
+     - updateOrganization()
+     - inviteUser()
+     - getOrganizationUsers()
+
+  RESULTADO ESPERADO:
+  - OrganizationService.js completo
+  - Funções testadas individualmente
+
+  TEMPO ESTIMADO: 3 horas
+
+---
+
+□ DIA 18-19: CRIAR ORDERS SERVICE
+
+  TAREFAS:
+  1. Criar arquivo: src/services/ordersService.js
+  2. Implementar funções:
+     - getOrders(orgId)
+     - createOrder(orgId, data)
+     - updateOrder(orgId, orderId, data)
+     - deleteOrder(orgId, orderId)
+     - getOrder(orgId, orderId)
+  3. Usar Firestore SDK (getDocs, setDoc, updateDoc, deleteDoc)
+
+  RESULTADO ESPERADO:
+  - OrdersService.js completo
+  - CRUD funcionando no Firestore
+
+  TEMPO ESTIMADO: 4 horas
+
+---
+
+□ DIA 20-21: MIGRAR ESTRUTURA FIRESTORE
+
+  TAREFAS:
+  1. Criar Collections no Firestore:
+     ├─ users/
+     ├─ organizations/
+     └─ (subcoleções: users, orders, settings)
+
+  2. Transferir dados manuais ou via script:
+     - 3 OS de teste
+     - Dados de organização
+     - Dados de perfil
+
+  3. Verificar no Firestore Console:
+     - Estrutura criada corretamente
+     - Dados visíveis
+
+  RESULTADO ESPERADO:
+  - Estrutura Firestore implementada
+  - Dados de teste presentes
+  - Console mostrando dados corretamente
+
+  TEMPO ESTIMADO: 2 horas
+
+---
+
+□ DIA 22: CRIAR ORGANIZATION STORE (PINIA)
+
+  TAREFAS:
+  1. Criar arquivo: src/stores/organization.js
+  2. Copiar código de IMPLEMENTACAO_CODIGO.md
+  3. Implementar states:
+     - currentOrganization
+     - organizations
+     - users
+     - loading
+     - error
+
+  RESULTADO ESPERADO:
+  - Store funcionando
+  - Dados carregados do Firestore
+
+  TEMPO ESTIMADO: 2 horas
+
+---
+
+□ DIA 23-24: CONECTAR DASHBOARD
+
+  TAREFAS:
+  1. Criar arquivo: src/views/Dashboard.vue
+  2. Listar OS vindo do Firestore (não localStorage)
+  3. Carregar dados do OrganizationStore
+  4. Listar usuários da organização
+  5. Mostrar estatísticas
+
+  RESULTADO ESPERADO:
+  - Dashboard mostrando dados do Firestore
+  - Sem uso de localStorage
+  - Dados sincronizando em tempo real
+
+  TEMPO ESTIMADO: 4 horas
+
+---
+
+□ DIA 25: TESTAR SINCRONIZAÇÃO
+
+  TAREFAS:
+  1. Abrir app em 2 abas diferentes
+  2. Criar OS em uma aba
+  3. Ver aparecer na outra aba (realtime)
+  4. Editar OS e ver atualizar em tempo real
+  5. Deletar OS e ver sumir em tempo real
+
+  RESULTADO ESPERADO:
+  - Sincronização em tempo real funcionando
+  - Múltiplas abas sincronizadas
+  - Nenhum erro no console
+
+  TEMPO ESTIMADO: 2 horas
+
+RESUMO SEMANA 3:
+  ✓ OrganizationService implementado
+  ✓ OrdersService implementado
+  ✓ Estrutura Firestore criada
+  ✓ Organization Store funcionando
+  ✓ Dashboard conectado ao Firestore
+  ✓ Sincronização em tempo real testada
+
+================================================================================
+                       SEMANA 4: SEGURANÇA + DEPLOY
+                      (3-5 Dias de Trabalho)
+================================================================================
+
+OBJETIVO: Implementar Security Rules e fazer deploy
+
+□ DIA 26-27: SECURITY RULES
+
+  TAREFAS:
+  1. Firebase Console > Firestore > Rules
+  2. Copiar código de ROADMAP_SAAS.md (seção 1.4)
+  3. Atualizar regras para seu caso
+  4. Testar:
+     - Usuário pode ler seus dados
+     - Usuário NÃO pode ler dados de outras orgs
+     - Admin pode gerenciar users
+     - Técnico pode criar/editar OS
+
+  RESULTADO ESPERADO:
+  - Security Rules implementadas
+  - Acesso controlado por role
+  - Dados seguros
+
+  TEMPO ESTIMADO: 3 horas
+
+---
+
+□ DIA 28: BUILD E DEPLOY
+
+  TAREFAS:
+  1. Build da aplicação:
+     npm run build
+  2. Instalar Firebase CLI:
+     npm install -g firebase-tools
+  3. Login:
+     firebase login
+  4. Configurar hosting:
+     firebase init hosting
+  5. Deploy:
+     firebase deploy
+
+  RESULTADO ESPERADO:
+  - App em produção
+  - URL: https://addevos-saas.web.app
+  - Funciona em mobile e desktop
+
+  TEMPO ESTIMADO: 1 hora
+
+---
+
+□ DIA 29-30: TESTES E AJUSTES
+
+  TAREFAS:
+  1. Testar fluxo completo:
+     - Registrar novo usuário
+     - Criar OS
+     - Editar OS
+     - Fazer login em 2 abas
+     - Convidar outro usuário
+  2. Verificar responsividade mobile
+  3. Testar WhatsApp/Chamada
+  4. Documentar bugs encontrados
+  5. Criar issues no GitHub
+
+  RESULTADO ESPERADO:
+  - App funcional em produção
+  - Usuários conseguem registrar e usar
+  - Documentação de bugs criada
+
+  TEMPO ESTIMADO: 3-4 horas
+
+RESUMO SEMANA 4:
+  ✓ Security Rules implementadas
+  ✓ App deployado em produção
+  ✓ Testes funcionais passando
+  ✓ Pronto para primeiros usuários
+
+================================================================================
+                        PRÓXIMOS PASSOS (MÊS 2)
+================================================================================
+
+SEMANA 5-8: MONETIZAÇÃO
+  □ Integrar Stripe
+  □ Criar planos (Free, Starter, Professional, Enterprise)
+  □ Implementar cobrança automática
+  □ Portal do cliente
+
+SEMANA 9-12: FEATURES AVANÇADAS
+  □ Cloud Functions (notificações, relatórios)
+  □ Integrações (WhatsApp Business, SMS)
+  □ Relatórios avançados
+  □ Backup automático
+
+================================================================================
+                      CHECKLIST DIÁRIO
+================================================================================
+
+CADA DIA, AO FINALIZAR:
+
+□ Código feito e testado
+□ Sem erros no console
+□ Sem warnings do linter
+□ Commit no GitHub com mensagem clara
+□ Documento atualizado com progresso
+□ Backup dos dados
+
+EXEMPLO DE COMMIT:
+  git commit -m "feat: implementar AuthService e tela de login"
+
+================================================================================
+                         RECURSOS ÚTEIS
+================================================================================
+
+DOCUMENTAÇÃO:
+  - Firebase Docs: https://firebase.google.com/docs
+  - Vue 3 Guide: https://vuejs.org/
+  - Pinia: https://pinia.vuejs.org/
+
+CÓDIGO PRONTO:
+  - IMPLEMENTACAO_CODIGO.md (exemplos de código)
+  - ROADMAP_SAAS.md (arquitetura e explicações)
+
+FERRAMENTAS:
+  - VS Code com extensions Firebase, Vue, ESLint
+  - Firebase Emulator (para testar localmente)
+  - Chrome DevTools (para debugar)
+
+================================================================================
+                          DÚVIDAS?
+================================================================================
+
+Se travar em algum passo:
+
+1. Verificar console do navegador (F12 > Console)
+2. Verificar logs do Firebase (Console > Logs)
+3. Reler a documentação relevante
+4. Testar com dados simples primeiro
+5. Buscar no Stack Overflow se necessário
+
+================================================================================
+                         BOA SORTE! 🚀
+================================================================================
+
+RESUMO TIMELINE:
+  Semana 1: Setup Firebase
+  Semana 2: Autenticação
+  Semana 3: Migração de dados
+  Semana 4: Segurança + Deploy
+  
+  Total: 4 semanas para ter SaaS funcional com Firebase
+
+Depois disso, adiciona planos, integrações, relatórios avançados, etc.
+
+COMECE HOJE!
+
+================================================================================
