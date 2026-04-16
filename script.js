@@ -340,85 +340,48 @@ function printOrder(order, title = 'Ordem de Serviço') {
     )
     .join('');
 
-  const html = `
-    <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="UTF-8">
-      <title>${title}</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
-        h1 { margin: 12px 0 10px; font-size: 22px; }
-        .shop {
-          text-align: left;
-          margin-bottom: 14px;
-          font-size: 18px;
-        }
-        .shop-name {
-          font-weight: 800;
-          font-size: 22px;
-          letter-spacing: 0.2px;
-        }
-        .shop-line { color: #333; font-size: 18px; }
-        .row { margin-bottom: 10px; }
-        .label { display: inline-block; width: 140px; font-weight: 600; }
-        .value { color: #222; }
-        .signatures {
-          margin-top: 40px;
-          display: flex;
-          flex-direction: column;
-          gap: 30px;
-        }
-        .signature-block {
-          flex: 1;
-          text-align: center;
-        }
-        .signature-line {
-          border-bottom: 1px solid #333;
-          height: 60px;
-          margin: 10px 0;
-        }
-        .signature-label {
-          font-size: 16px;
-          font-weight: 700;
-          color: #333;
-          margin-top: 5px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-      </style>
-    </head>
-    <body>
-      ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
-      <h1>${title}</h1>
-      ${rows}
-      
-      <div class="signatures">
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${order.customerName || 'Cliente'}</div>
-        </div>
+  const printContent = `
+    <div id="print-content-wrapper" style="display: none; position: absolute; left: -9999px; width: 100%; padding: 24px;">
+      <div style="font-family: Arial, sans-serif; color: #111;">
+        ${shopBlock ? `<div style="text-align: left; margin-bottom: 14px; font-size: 18px;">${shopBlock}</div>` : ''}
+        <h1 style="margin: 12px 0 10px; font-size: 22px;">${title}</h1>
+        ${rows}
         
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
+        <div style="margin-top: 40px; display: flex; flex-direction: column; gap: 30px;">
+          <div style="flex: 1; text-align: center;">
+            <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
+            <div style="border-bottom: 1px solid #333; height: 60px; margin: 10px 0;"></div>
+            <div style="font-size: 16px; font-weight: 700; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${order.customerName || 'Cliente'}</div>
+          </div>
+          
+          <div style="flex: 1; text-align: center;">
+            <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
+            <div style="border-bottom: 1px solid #333; height: 60px; margin: 10px 0;"></div>
+            <div style="font-size: 16px; font-weight: 700; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${settings.shopName || 'Assistência Técnica'}</div>
+          </div>
         </div>
       </div>
-    </body>
-    </html>
+    </div>
   `;
 
-  const printWindow = window.open('', '', 'width=800,height=600');
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
+  // Criar elemento temporário para impressão
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = printContent;
+  document.body.appendChild(tempDiv);
+  
+  // Mostrar elemento e imprimir
+  const printWrapper = document.getElementById('print-content-wrapper');
+  printWrapper.style.display = 'block';
+  printWrapper.style.position = 'relative';
+  printWrapper.style.left = '0';
   
   setTimeout(() => {
-    printWindow.print();
-    printWindow.close();
-  }, 250);
+    window.print();
+    // Remover após impressão
+    setTimeout(() => {
+      document.body.removeChild(tempDiv);
+    }, 100);
+  }, 100);
 }
 
 function statusChip(status) {
