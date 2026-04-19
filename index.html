@@ -70,9 +70,82 @@
               <label>Observações:
                 <textarea id="notes" rows="2"></textarea>
               </label>
+              <div class="checklist-card form-grid-full">
+                <div class="checklist-heading">
+                  <p class="checklist-eyebrow">Checklist opcional</p>
+                  <h4>Estado do aparelho</h4>
+                </div>
+                <div class="checklist-options">
+                  <label class="check-option">
+                    <input type="checkbox" id="deviceDoesNotPowerOn" data-checklist="device" value="doesNotPowerOn">
+                    <span>Aparelho não liga</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="device" value="screenCracked">
+                    <span>Tela trincada</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="device" value="backCoverDamaged">
+                    <span>Tampa traseira riscada/quebrada</span>
+                  </label>
+                  <label class="check-option" data-power-required="true">
+                    <input type="checkbox" data-checklist="device" value="touchWorking">
+                    <span>Touch funcionando</span>
+                  </label>
+                  <label class="check-option" data-power-required="true">
+                    <input type="checkbox" data-checklist="device" value="displayWorking">
+                    <span>Imagem no display</span>
+                  </label>
+                  <label class="check-option" data-power-required="true">
+                    <input type="checkbox" data-checklist="device" value="camerasWorking">
+                    <span>Câmeras funcionando</span>
+                  </label>
+                  <label class="check-option" data-power-required="true">
+                    <input type="checkbox" data-checklist="device" value="buttonsWorking">
+                    <span>Botões funcionando</span>
+                  </label>
+                  <label class="check-option" data-power-required="true">
+                    <input type="checkbox" data-checklist="device" value="chargingWorking">
+                    <span>Carregamento funcionando</span>
+                  </label>
+                </div>
+              </div>
+              <div class="checklist-card form-grid-full">
+                <div class="checklist-heading">
+                  <p class="checklist-eyebrow">Checklist opcional</p>
+                  <h4>Periféricos recebidos</h4>
+                </div>
+                <div class="checklist-options">
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="chip">
+                    <span>Chip</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="capa">
+                    <span>Capa</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="pelicula">
+                    <span>Película</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="carregador">
+                    <span>Carregador</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="caboUsb">
+                    <span>Cabo USB</span>
+                  </label>
+                  <label class="check-option">
+                    <input type="checkbox" data-checklist="accessory" value="cartaoMemoria">
+                    <span>Cartão de memória</span>
+                  </label>
+                </div>
+              </div>
             </div>
             <div class="form-actions">
               <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>
+              <button type="button" id="sharePdfForm" class="ghost-btn whatsapp-pdf-btn">Whats PDF</button>
               <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
               <button type="submit" class="primary-btn">Salvar</button>
             </div>

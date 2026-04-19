@@ -415,11 +415,12 @@ input:focus, textarea:focus {
 }
 
 .form-grid .form-field-wide,
-.form-grid label:last-child {
+.form-grid > label:last-of-type,
+.form-grid .form-grid-full {
   grid-column: 1 / -1;
 }
 
-.form-grid label {
+.form-grid > label {
   color: var(--text);
   font-size: 14px;
   font-weight: 600;
@@ -433,20 +434,95 @@ input:focus, textarea:focus {
   box-shadow: 0 10px 22px rgba(12, 11, 68, 0.06);
 }
 
-.form-grid input,
-.form-grid textarea {
+.form-grid > label input,
+.form-grid > label textarea {
   background: rgba(255,255,255,0.92);
 }
 
-.form-grid textarea {
+.form-grid > label textarea {
   resize: vertical;
   min-height: 84px;
 }
 
-.form-grid label:focus-within {
+.form-grid > label:focus-within {
   border-color: rgba(89,103,255,0.34);
   box-shadow: 0 14px 28px rgba(89, 103, 255, 0.12);
   transform: translateY(-1px);
+}
+
+.checklist-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9ff 100%);
+  border: 1px solid rgba(12,11,68,0.08);
+  box-shadow: 0 10px 22px rgba(12, 11, 68, 0.06);
+}
+
+.checklist-heading h4 {
+  margin: 4px 0 0;
+  font-size: 18px;
+  color: var(--primary-strong);
+}
+
+.checklist-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.checklist-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.check-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(89,103,255,0.06);
+  border: 1px solid rgba(89,103,255,0.12);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.check-option input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+}
+
+.check-option:hover {
+  border-color: rgba(89,103,255,0.28);
+  transform: translateY(-1px);
+}
+
+.check-option.is-hidden {
+  display: none;
+}
+
+.checklist-summary {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(89,103,255,0.06);
+  color: var(--text);
+}
+
+.checklist-summary strong {
+  display: block;
+  margin-bottom: 4px;
 }
 
 .form-actions {
@@ -465,6 +541,13 @@ input:focus, textarea:focus {
 
 #printForm {
   background: rgba(12, 11, 68, 0.07);
+}
+
+.whatsapp-pdf-btn {
+  background: linear-gradient(135deg, #128c7e 0%, #25d366 100%);
+  color: #fff;
+  border: none;
+  font-weight: 600;
 }
 
 .detail-card {
@@ -588,6 +671,7 @@ input:focus, textarea:focus {
 .status-done.icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9.5 16.17 5.33 12l-1.41 1.41L9.5 19 20.08 8.41 18.67 7l-9.17 9.17Z"/></svg>'); }
 .action-row [data-action="save"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M6 3h9l3 3v13H6Zm2 2v4h8V7.5L14.5 5Zm0 8v4h8v-4Z"/></svg>'); }
 .action-row [data-action="edit"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="m15.728 3.293 4.979 4.98-9.9 9.9-4.978-4.98Zm-7.07 10.242 2.121 2.122 1.414-1.415-2.12-2.12Zm10.606-6.364-2.122-2.121-1.414 1.414 2.12 2.12ZM4 19h16v2H4Z"/></svg>'); }
+.action-row [data-action="share-pdf"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5"/><path d="M8 12h8v1.5H8Zm0 3h8v1.5H8Zm0 3h5v1.5H8Z"/></svg>'); }
 .action-row [data-action="print"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M7 3h10v4H7Zm-1 6h12a3 3 0 0 1 3 3v5h-4v-3H7v3H3v-5a3 3 0 0 1 3-3Zm1 2a1 1 0 1 0 0 2h10a1 1 0 1 0 0-2Z"/></svg>'); }
 .action-row [data-action="delete"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9 4h6l1 2h4v2H4V6h4Zm-1 4h2v10H8Zm6 0h2v10h-2ZM6 8h12l-.8 12.4a2 2 0 0 1-2 1.6H8.8a2 2 0 0 1-2-1.6Z"/></svg>'); }
 .contact-row [data-action="whatsapp"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.955 1.23l-.355.184-.368-.093 1.398-5.101a.5.5 0 00-.061-.46 9.993 9.993 0 0114.869 7.5c0 5.522-4.477 10-10 10a9.954 9.954 0 01-5.064-1.371l-.356-.187-.368.092 1.401 5.102a.5.5 0 00.61.396 10 10 0 008.777-17.57z"/></svg>'); }
@@ -1015,8 +1099,12 @@ input:focus, textarea:focus {
     grid-template-columns: 1fr;
   }
   .form-grid .form-field-wide,
-  .form-grid label:last-child {
+  .form-grid > label:last-of-type,
+  .form-grid .form-grid-full {
     grid-column: auto;
+  }
+  .checklist-options {
+    grid-template-columns: 1fr;
   }
   .form-actions {
     justify-content: flex-end;

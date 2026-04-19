@@ -3,6 +3,25 @@ const SETTINGS_KEY = 'settings';
 const DEFAULT_LOGO = 'assets/img/logo.png';
 const DEFAULT_PROFILE_PHOTO = 'assets/img/perfil-sem-foto.jpg';
 
+const DEVICE_CHECKLIST_ITEMS = [
+  { key: 'doesNotPowerOn', label: 'Aparelho não liga' },
+  { key: 'screenCracked', label: 'Tela trincada' },
+  { key: 'backCoverDamaged', label: 'Tampa traseira riscada/quebrada' },
+  { key: 'touchWorking', label: 'Touch funcionando', requiresPower: true },
+  { key: 'displayWorking', label: 'Imagem no display', requiresPower: true },
+  { key: 'camerasWorking', label: 'Câmeras funcionando', requiresPower: true },
+  { key: 'buttonsWorking', label: 'Botões funcionando', requiresPower: true },
+  { key: 'chargingWorking', label: 'Carregamento funcionando', requiresPower: true },
+];
+const ACCESSORY_CHECKLIST_ITEMS = [
+  { key: 'chip', label: 'Chip' },
+  { key: 'capa', label: 'Capa' },
+  { key: 'pelicula', label: 'Película' },
+  { key: 'carregador', label: 'Carregador' },
+  { key: 'caboUsb', label: 'Cabo USB' },
+  { key: 'cartaoMemoria', label: 'Cartão de memória' },
+];
+
 const els = {
   screens: {
     listView: document.getElementById('listView'),
@@ -63,6 +82,89 @@ const formFields = {
   notes: document.getElementById('notes'),
 };
 
+function buildChecklistState(items, source = {}) {
+  return items.reduce((state, item) => {
+    state[item.key] = Boolean(source[item.key]);
+    return state;
+  }, {});
+}
+
+function getChecklistInput(group, key) {
+  return document.querySelector(`[data-checklist="${group}"][value="${key}"]`);
+}
+
+function readChecklistState(group, items) {
+  return items.reduce((state, item) => {
+    state[item.key] = Boolean(getChecklistInput(group, item.key)?.checked);
+    return state;
+  }, {});
+}
+
+function writeChecklistState(group, items, source = {}) {
+  items.forEach((item) => {
+    const input = getChecklistInput(group, item.key);
+    if (input) input.checked = Boolean(source[item.key]);
+  });
+}
+
+function getDeviceChecklistStateFromForm() {
+  const state = readChecklistState('device', DEVICE_CHECKLIST_ITEMS);
+  if (state.doesNotPowerOn) {
+    DEVICE_CHECKLIST_ITEMS.filter((item) => item.requiresPower).forEach((item) => {
+      state[item.key] = false;
+    });
+  }
+  return state;
+}
+
+function updateDeviceChecklistVisibility({ clearHidden = false } = {}) {
+  const doesNotPowerOn = Boolean(getChecklistInput('device', 'doesNotPowerOn')?.checked);
+
+  document.querySelectorAll('[data-power-required="true"]').forEach((option) => {
+    option.classList.toggle('is-hidden', doesNotPowerOn);
+    const input = option.querySelector('input');
+    if (!input) return;
+    input.disabled = doesNotPowerOn;
+    if (doesNotPowerOn && clearHidden) input.checked = false;
+  });
+}
+
+function getCheckedChecklistLabels(items, state = {}) {
+  const labels = [];
+
+  items.forEach((item) => {
+    if (item.requiresPower && state.doesNotPowerOn) return;
+    if (state[item.key]) labels.push(item.label);
+  });
+
+  return labels;
+}
+
+function renderChecklistSummary(title, labels) {
+  return `
+    <div class="checklist-summary">
+      <strong>${title}:</strong>
+      <span>${labels.length ? labels.join(', ') : '-'}</span>
+    </div>
+  `;
+}
+
+function renderPrintChecklist(title, items, state = {}) {
+  const listItems = items
+    .filter((item) => !(item.requiresPower && state.doesNotPowerOn))
+    .map((item) => {
+      return `<li><span class="checkmark">${state[item.key] ? '☑' : '☐'}</span><span>${item.label}</span></li>`;
+    })
+    .join('');
+
+  return `
+    <div class="print-checklist">
+      <strong>${title}</strong>
+      <ul>${listItems || '<li><span>-</span></li>'}</ul>
+    </div>
+  `;
+}
+
 let editingId = null;
 let detailPendingStatus = null;
 let detailCurrentId = null;
@@ -75,6 +177,8 @@ function loadOrders() {
       ...o,
       price: Number(o.price) || 0,
       cost: Number(o.cost) || 0,
+      deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, o.deviceChecklist),
+      accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, o.accessoryChecklist),
     }));
 
   const seed = [
@@ -140,6 +244,8 @@ function createOrderObject({
   customerName,
   phone = '',
   customerDocument = '',
+  deviceChecklist = buildChecklistState(DEVICE_CHECKLIST_ITEMS),
+  accessoryChecklist = buildChecklistState(ACCESSORY_CHECKLIST_ITEMS),
   device,
   issue,
   price = 0,
@@ -153,6 +259,8 @@ function createOrderObject({
     customerName,
     phone,
     customerDocument,
+    deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, deviceChecklist),
+    accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, accessoryChecklist),
     device,
     issue,
     price: Number(price) || 0,
@@ -306,6 +414,242 @@ function formatDate(dateString) {
   return date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 }
 
+function sanitizePdfText(value) {
+  return (value || '')
+    .toString()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)')
+    .trim();
+}
+
+function wrapPdfLine(text, maxLength = 86) {
+  const clean = sanitizePdfText(text);
+  if (!clean) return [''];
+
+  const words = clean.split(/\s+/);
+  const lines = [];
+  let current = '';
+
+  words.forEach((word) => {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length <= maxLength) {
+      current = candidate;
+      return;
+    }
+
+    if (current) lines.push(current);
+
+    if (word.length <= maxLength) {
+      current = word;
+      return;
+    }
+
+    for (let index = 0; index < word.length; index += maxLength) {
+      const chunk = word.slice(index, index + maxLength);
+      if (chunk.length === maxLength || index + maxLength < word.length) {
+        lines.push(chunk);
+      } else {
+        current = chunk;
+      }
+    }
+  });
+
+  if (current) lines.push(current);
+  return lines;
+}
+
+function buildOrderPdfLines(order, title = 'Ordem de Servico') {
+  const settings = getSettingsSnapshot();
+  const deviceChecklistLabels = getCheckedChecklistLabels(
+    DEVICE_CHECKLIST_ITEMS,
+    buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+  );
+  const accessoryChecklistLabels = getCheckedChecklistLabels(
+    ACCESSORY_CHECKLIST_ITEMS,
+    buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+  );
+
+  const lines = [
+    sanitizePdfText(settings.shopName || 'Assistencia Tecnica'),
+    sanitizePdfText(settings.shopAddress || ''),
+    settings.shopPhone ? `Telefone: ${formatPhoneDigits(settings.shopPhone)}` : '',
+    settings.shopInstagram ? `Instagram: ${settings.shopInstagram}` : '',
+    settings.shopFacebook ? `Facebook: ${settings.shopFacebook}` : '',
+    '',
+    sanitizePdfText(title),
+    '',
+    `Cliente: ${order.customerName || '-'}`,
+    `Telefone: ${order.phone ? formatPhoneDigits(order.phone) : '-'}`,
+    `Documento: ${order.customerDocument || '-'}`,
+    `Aparelho: ${order.device || '-'}`,
+    `Defeito: ${order.issue || '-'}`,
+    `Valor: ${formatCurrency(order.price || 0)}`,
+    `Custo: ${formatCurrency(order.cost || 0)}`,
+    `Observacoes: ${order.notes || '-'}`,
+    `Status: ${order.status || '-'}`,
+    `Criada em: ${order.createdAt ? formatDate(order.createdAt) : '-'}`,
+    `Atualizada em: ${order.updatedAt ? formatDate(order.updatedAt) : '-'}`,
+    '',
+    'Checklist do aparelho:',
+    ...(deviceChecklistLabels.length ? deviceChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado']),
+    '',
+    'Perifericos recebidos:',
+    ...(accessoryChecklistLabels.length ? accessoryChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado']),
+    '',
+    'Assinatura do cliente: ______________________________',
+    `Assinatura da loja: ${sanitizePdfText(settings.shopName || 'Assistencia Tecnica')} __________________`,
+  ];
+
+  return lines.flatMap((line) => wrapPdfLine(line));
+}
+
+function createSimplePdfBlob(lines) {
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const marginLeft = 40;
+  const marginTop = 48;
+  const lineHeight = 14;
+  const maxLinesPerPage = 52;
+  const pages = [];
+
+  for (let index = 0; index < lines.length; index += maxLinesPerPage) {
+    pages.push(lines.slice(index, index + maxLinesPerPage));
+  }
+
+  if (!pages.length) pages.push(['']);
+
+  const fontObjectNumber = 3;
+  const objects = [];
+  const pageRefs = [];
+
+  pages.forEach((pageLines, pageIndex) => {
+    const pageObjectNumber = 4 + pageIndex * 2;
+    const contentObjectNumber = pageObjectNumber + 1;
+    pageRefs.push(`${pageObjectNumber} 0 R`);
+
+    const contentLines = [
+      'BT',
+      '/F1 11 Tf',
+      `${marginLeft} ${pageHeight - marginTop} Td`,
+    ];
+
+    pageLines.forEach((line, lineIndex) => {
+      const safeText = sanitizePdfText(line);
+      contentLines.push(`(${safeText}) Tj`);
+      if (lineIndex < pageLines.length - 1) {
+        contentLines.push(`0 -${lineHeight} Td`);
+      }
+    });
+
+    contentLines.push('ET');
+    const stream = `${contentLines.join('\n')}\n`;
+
+    objects.push({
+      number: pageObjectNumber,
+      body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontObjectNumber} 0 R >> >> /Contents ${contentObjectNumber} 0 R >>`,
+    });
+    objects.push({
+      number: contentObjectNumber,
+      body: `<< /Length ${stream.length} >>\nstream\n${stream}endstream`,
+    });
+  });
+
+  const pdfObjects = [
+    { number: 1, body: '<< /Type /Catalog /Pages 2 0 R >>' },
+    { number: 2, body: `<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count ${pages.length} >>` },
+    { number: 3, body: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>' },
+    ...objects.sort((a, b) => a.number - b.number),
+  ];
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+
+  pdfObjects.forEach((object) => {
+    offsets[object.number] = pdf.length;
+    pdf += `${object.number} 0 obj\n${object.body}\nendobj\n`;
+  });
+
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${pdfObjects.length + 1}\n`;
+  pdf += '0000000000 65535 f \n';
+
+  for (let objectNumber = 1; objectNumber <= pdfObjects.length; objectNumber += 1) {
+    pdf += `${String(offsets[objectNumber]).padStart(10, '0')} 00000 n \n`;
+  }
+
+  pdf += `trailer\n<< /Size ${pdfObjects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+
+  return new Blob([pdf], { type: 'application/pdf' });
+}
+
+function createOrderPdfFile(order, title = 'Ordem de Servico') {
+  const lines = buildOrderPdfLines(order, title);
+  const blob = createSimplePdfBlob(lines);
+  const safeName = sanitizePdfText(order.customerName || 'cliente')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-zA-Z0-9-_]/g, '')
+    .toLowerCase() || 'cliente';
+
+  return new File([blob], `os-${safeName}.pdf`, { type: 'application/pdf' });
+}
+
+function getWhatsAppNumber(phone) {
+  const phoneNumber = parsePhone(phone);
+  if (!phoneNumber) return '';
+  return phoneNumber.startsWith('55') ? phoneNumber : `55${phoneNumber}`;
+}
+
+function getWhatsAppMessage(order) {
+  const settings = loadSettings();
+  const shopName = settings.shopName || 'Assistência';
+  return `Olá ${order.customerName}, segue o PDF da sua OS da ${shopName} referente ao aparelho ${order.device}.`;
+}
+
+function downloadFile(file) {
+  const url = URL.createObjectURL(file);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = file.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function sendOrderPdfViaWhatsApp(order, title = 'Ordem de Servico') {
+  const pdfFile = createOrderPdfFile(order, title);
+  const phoneNumber = getWhatsAppNumber(order.phone);
+  const message = getWhatsAppMessage(order);
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+    try {
+      await navigator.share({
+        title,
+        text: message,
+        files: [pdfFile],
+      });
+      return;
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+    }
+  }
+
+  downloadFile(pdfFile);
+
+  if (!phoneNumber) {
+    await alertModal('O PDF foi baixado. Como não há telefone válido, envie o arquivo manualmente pelo WhatsApp.');
+    return;
+  }
+
+  const whatsappURL = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(`${message} O PDF foi baixado no seu aparelho para anexar.`)}`;
+  window.open(whatsappURL, '_blank');
+  await alertModal('O PDF foi baixado. Anexe o arquivo no WhatsApp após abrir a conversa.');
+}
+
 function printOrder(order, title = 'Ordem de Serviço') {
   const settings = getSettingsSnapshot();
   const logoSrc = settings.shopLogo || DEFAULT_LOGO;
@@ -345,6 +689,17 @@ function printOrder(order, title = 'Ordem de Serviço') {
     )
     .join('');
 
+  const deviceChecklistBlock = renderPrintChecklist(
+    'Checklist do Aparelho',
+    DEVICE_CHECKLIST_ITEMS,
+    buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+  );
+  const accessoryChecklistBlock = renderPrintChecklist(
+    'Periféricos Recebidos',
+    ACCESSORY_CHECKLIST_ITEMS,
+    buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+  );
+
   const signatures = `
       <div class="signatures">
         <div class="signature-block">
@@ -366,6 +721,10 @@ function printOrder(order, title = 'Ordem de Serviço') {
         ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
         <h1>${title}</h1>
         ${rows}
+        <div class="print-checklists">
+          ${deviceChecklistBlock}
+          ${accessoryChecklistBlock}
+        </div>
         ${signatures}
       </div>`;
 
@@ -419,6 +778,35 @@ function printOrder(order, title = 'Ordem de Serviço') {
         .row { margin-bottom: 6px; font-size: 12px; }
         .label { display: inline-block; width: 100px; font-weight: 600; }
         .value { color: #222; }
+        .print-checklists {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-top: 12px;
+        }
+        .print-checklist {
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 10px;
+        }
+        .print-checklist strong {
+          display: block;
+          margin-bottom: 6px;
+          font-size: 12px;
+        }
+        .print-checklist ul {
+          list-style: none;
+          display: grid;
+          gap: 4px;
+          padding: 0;
+        }
+        .print-checklist li {
+          display: flex;
+          gap: 6px;
+          align-items: flex-start;
+          font-size: 11px;
+        }
+        .checkmark { min-width: 14px; }
         .signatures {
           margin-top: auto;
           padding-top: 12px;
@@ -447,6 +835,11 @@ function printOrder(order, title = 'Ordem de Serviço') {
           margin-top: 2px;
           text-transform: uppercase;
           letter-spacing: 0.3px;
+        }
+        @media (max-width: 700px) {
+          .print-checklists {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
     </head>
@@ -601,6 +994,9 @@ function clearForm() {
   els.form.reset();
   formFields.price.dataset.raw = 0;
   formFields.cost.dataset.raw = 0;
+  writeChecklistState('device', DEVICE_CHECKLIST_ITEMS, buildChecklistState(DEVICE_CHECKLIST_ITEMS));
+  writeChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS, buildChecklistState(ACCESSORY_CHECKLIST_ITEMS));
+  updateDeviceChecklistVisibility({ clearHidden: true });
 }
 
 function openScreen(target) {
@@ -636,6 +1032,9 @@ function openForm(editOrder) {
     formatCurrencyInput(formFields.cost);
     formatPhoneInput(formFields.phone);
     formFields.notes.value = editOrder.notes;
+    writeChecklistState('device', DEVICE_CHECKLIST_ITEMS, buildChecklistState(DEVICE_CHECKLIST_ITEMS, editOrder.deviceChecklist));
+    writeChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS, buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, editOrder.accessoryChecklist));
+    updateDeviceChecklistVisibility();
   } else {
     clearForm();
   }
@@ -657,6 +1056,20 @@ function openDetail(id) {
   const historyToggleButton = showToggleHistory
     ? `<button data-action="toggle-history" class="ghost-btn history-toggle-btn">${detailHistoryExpanded ? 'Ver menos' : 'Ver mais'}</button>`
     : '';
+  const deviceChecklistSummary = renderChecklistSummary(
+    'Checklist do aparelho',
+    getCheckedChecklistLabels(
+      DEVICE_CHECKLIST_ITEMS,
+      buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+    )
+  );
+  const accessoryChecklistSummary = renderChecklistSummary(
+    'Periféricos recebidos',
+    getCheckedChecklistLabels(
+      ACCESSORY_CHECKLIST_ITEMS,
+      buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+    )
+  );
 
   els.detailContent.innerHTML = `
     <div class="detail-grid">
@@ -673,6 +1086,8 @@ function openDetail(id) {
       <div><strong>Criada em:</strong> ${formatDate(order.createdAt)}</div>
       <div><strong>Atualizada em:</strong> ${formatDate(order.updatedAt)}</div>
     </div>
+    ${deviceChecklistSummary}
+    ${accessoryChecklistSummary}
     <div class="history">
       <strong>Histórico</strong>
       <ul>${historyList || '<li>-</li>'}</ul>
@@ -692,6 +1107,7 @@ function openDetail(id) {
     <div class="detail-actions action-row">
       <strong class="group-title">Ações</strong>
       <button data-action="edit" class="primary-btn icon-btn">Editar</button>
+      <button data-action="share-pdf" class="ghost-btn whatsapp-pdf-btn icon-btn">WhatsApp PDF</button>
       <button data-action="print" class="ghost-btn icon-btn">Imprimir</button>
       <button data-action="delete" class="ghost-btn delete-btn icon-btn">Excluir</button>
     </div>
@@ -735,6 +1151,12 @@ async function handleDetailAction(id, dataset) {
     const order = loadOrders().find((o) => o.id === id);
     if (order) {
       printOrder(order, 'Detalhes da OS');
+    }
+  }
+  if (dataset.action === 'share-pdf') {
+    const order = loadOrders().find((o) => o.id === id);
+    if (order) {
+      await sendOrderPdfViaWhatsApp(order, 'Detalhes da OS');
     }
   }
   if (dataset.action === 'whatsapp') {
@@ -858,6 +1280,8 @@ async function handleSubmit(event) {
     customerName: formFields.customerName.value.trim(),
     phone: parsePhone(formFields.phone.value),
     customerDocument: formFields.customerDocument.value.trim(),
+    deviceChecklist: getDeviceChecklistStateFromForm(),
+    accessoryChecklist: readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS),
     device: formFields.device.value.trim(),
     issue: formFields.issue.value.trim(),
     price: parseCurrency(formFields.price.value),
@@ -897,21 +1321,30 @@ async function handleSubmit(event) {
   openScreen('listView');
 }
 
-function handleFormPrint() {
-  const orderLike = {
+function getFormOrderLike() {
+  return {
     customerName: formFields.customerName.value.trim() || '(sem nome)',
     phone: parsePhone(formFields.phone.value),
     customerDocument: formFields.customerDocument.value.trim() || '-',
+    deviceChecklist: getDeviceChecklistStateFromForm(),
+    accessoryChecklist: readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS),
     device: formFields.device.value.trim() || '-',
     issue: formFields.issue.value.trim() || '-',
     price: parseCurrency(formFields.price.value),
+    cost: parseCurrency(formFields.cost.value),
     notes: formFields.notes.value.trim() || '-',
     status: 'Aguardando',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
+}
 
-  printOrder(orderLike, 'Nova OS');
+function handleFormPrint() {
+  printOrder(getFormOrderLike(), 'Nova OS');
+}
+
+async function handleFormSharePdf() {
+  await sendOrderPdfViaWhatsApp(getFormOrderLike(), 'Nova OS');
 }
 
 function readFileAsDataUrl(file) {
@@ -1107,6 +1540,7 @@ function bindEvents() {
   els.closeDetail.addEventListener('click', () => openScreen('listView'));
   document.getElementById('closeFinance').addEventListener('click', () => openScreen('listView'));
   document.getElementById('printForm').addEventListener('click', handleFormPrint);
+  document.getElementById('sharePdfForm')?.addEventListener('click', handleFormSharePdf);
   els.settingsForm.addEventListener('submit', handleSettingsSave);
   document.getElementById('editSettings').addEventListener('click', enableSettingsEdit);
   document.getElementById('cancelSettings').addEventListener('click', cancelSettingsEdit);
@@ -1129,6 +1563,9 @@ function bindEvents() {
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
   els.settingsFields.shopPhone.addEventListener('input', () => formatPhoneInput(els.settingsFields.shopPhone));
   els.settingsFields.shopPhone.addEventListener('blur', () => formatPhoneInput(els.settingsFields.shopPhone));
+  getChecklistInput('device', 'doesNotPowerOn')?.addEventListener('change', () => {
+    updateDeviceChecklistVisibility({ clearHidden: true });
+  });
 }
 
 function start() {
@@ -1136,6 +1573,7 @@ function start() {
   loadSettings();
   bindEvents();
   initNavigation();
+  updateDeviceChecklistVisibility({ clearHidden: true });
   renderOrders();
   updateFinance();
 }
