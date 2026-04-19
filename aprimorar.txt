@@ -1,1 +1,3 @@
-1- adicionar tmepo de garantia regras da OS
+1- adicionar tempo de garantia regras da OS no perfil para ser imprimido junto com a os 
+
+1- sempre quando carregar a pagina inicial e o perfil for igual ao defout ele pede para configurar o perfil para imprimir os certa 
