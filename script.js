@@ -55,6 +55,7 @@ const els = {
 const formFields = {
   customerName: document.getElementById('customerName'),
   phone: document.getElementById('phone'),
+  customerDocument: document.getElementById('customerDocument'),
   device: document.getElementById('device'),
   issue: document.getElementById('issue'),
   price: document.getElementById('price'),
@@ -138,6 +139,7 @@ function saveSettings(settings) {
 function createOrderObject({
   customerName,
   phone = '',
+  customerDocument = '',
   device,
   issue,
   price = 0,
@@ -150,6 +152,7 @@ function createOrderObject({
     id: crypto.randomUUID(),
     customerName,
     phone,
+    customerDocument,
     device,
     issue,
     price: Number(price) || 0,
@@ -321,6 +324,7 @@ function printOrder(order, title = 'Ordem de Serviço') {
   const fields = [
     { label: 'Cliente', value: order.customerName || '-' },
     { label: 'Telefone', value: order.phone ? formatPhoneDigits(order.phone) : '-' },
+    { label: 'Documento', value: order.customerDocument || '-' },
     { label: 'Aparelho', value: order.device || '-' },
     { label: 'Defeito', value: order.issue || '-' },
     { label: 'Valor', value: formatCurrency(order.price || 0) },
@@ -623,6 +627,7 @@ function openForm(editOrder) {
     els.formTitle.textContent = 'Editar OS';
     formFields.customerName.value = editOrder.customerName;
     formFields.phone.value = editOrder.phone || '';
+    formFields.customerDocument.value = editOrder.customerDocument || '';
     formFields.device.value = editOrder.device;
     formFields.issue.value = editOrder.issue;
     formFields.price.value = editOrder.price || 0;
@@ -657,6 +662,7 @@ function openDetail(id) {
     <div class="detail-grid">
       <div><strong>Cliente:</strong> ${order.customerName}</div>
       <div><strong>Telefone:</strong> ${order.phone ? formatPhoneDigits(order.phone) : '-'}</div>
+      <div><strong>Documento:</strong> ${order.customerDocument || '-'}</div>
       <div><strong>Aparelho:</strong> ${order.device}</div>
       <div><strong>Defeito:</strong> ${order.issue}</div>
       <div><strong>Valor:</strong> ${formatCurrency(order.price)}</div>
@@ -851,6 +857,7 @@ async function handleSubmit(event) {
   const data = {
     customerName: formFields.customerName.value.trim(),
     phone: parsePhone(formFields.phone.value),
+    customerDocument: formFields.customerDocument.value.trim(),
     device: formFields.device.value.trim(),
     issue: formFields.issue.value.trim(),
     price: parseCurrency(formFields.price.value),
@@ -894,6 +901,7 @@ function handleFormPrint() {
   const orderLike = {
     customerName: formFields.customerName.value.trim() || '(sem nome)',
     phone: parsePhone(formFields.phone.value),
+    customerDocument: formFields.customerDocument.value.trim() || '-',
     device: formFields.device.value.trim() || '-',
     issue: formFields.issue.value.trim() || '-',
     price: parseCurrency(formFields.price.value),

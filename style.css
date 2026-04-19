@@ -414,8 +414,8 @@ input:focus, textarea:focus {
   grid-template-columns: 1fr 1fr;
 }
 
-.form-grid label:nth-child(4),
-.form-grid label:nth-child(7) {
+.form-grid .form-field-wide,
+.form-grid label:last-child {
   grid-column: 1 / -1;
 }
 
@@ -1014,8 +1014,8 @@ input:focus, textarea:focus {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  .form-grid label:nth-child(4),
-  .form-grid label:nth-child(7) {
+  .form-grid .form-field-wide,
+  .form-grid label:last-child {
     grid-column: auto;
   }
   .form-actions {
