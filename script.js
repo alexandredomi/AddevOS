@@ -82,6 +82,15 @@ const formFields = {
   notes: document.getElementById('notes'),
 };
 
+function isChecklistEnabled(group) {
+  return document.querySelector(`input[name="${group}ChecklistEnabled"]:checked`)?.value === 'true';
+}
+
+function setChecklistEnabled(group, enabled) {
+  const target = document.querySelector(`input[name="${group}ChecklistEnabled"][value="${enabled ? 'true' : 'false'}"]`);
+  if (target) target.checked = true;
+}
+
 function buildChecklistState(items, source = {}) {
   return items.reduce((state, item) => {
     state[item.key] = Boolean(source[item.key]);
@@ -91,6 +100,10 @@ function buildChecklistState(items, source = {}) {
 
 function getChecklistInput(group, key) {
   return document.querySelector(`[data-checklist="${group}"][value="${key}"]`);
+}
+
+function getChecklistCard(group) {
+  return document.querySelector(`[data-checklist-card="${group}"]`);
 }
 
 function readChecklistState(group, items) {
@@ -108,6 +121,10 @@ function writeChecklistState(group, items, source = {}) {
 }
 
 function getDeviceChecklistStateFromForm() {
+  if (!isChecklistEnabled('device')) {
+    return buildChecklistState(DEVICE_CHECKLIST_ITEMS);
+  }
+
   const state = readChecklistState('device', DEVICE_CHECKLIST_ITEMS);
   if (state.doesNotPowerOn) {
     DEVICE_CHECKLIST_ITEMS.filter((item) => item.requiresPower).forEach((item) => {
@@ -118,14 +135,48 @@ function getDeviceChecklistStateFromForm() {
 }
 
 function updateDeviceChecklistVisibility({ clearHidden = false } = {}) {
+  const checklistEnabled = isChecklistEnabled('device');
   const doesNotPowerOn = Boolean(getChecklistInput('device', 'doesNotPowerOn')?.checked);
+  const card = getChecklistCard('device');
+  const options = card?.querySelector('.checklist-options');
+
+  if (card) {
+    card.classList.toggle('is-collapsed', !checklistEnabled);
+  }
+  if (options) {
+    options.classList.toggle('is-hidden-block', !checklistEnabled);
+  }
 
   document.querySelectorAll('[data-power-required="true"]').forEach((option) => {
-    option.classList.toggle('is-hidden', doesNotPowerOn);
+    option.classList.toggle('is-hidden', !checklistEnabled || doesNotPowerOn);
     const input = option.querySelector('input');
     if (!input) return;
-    input.disabled = doesNotPowerOn;
-    if (doesNotPowerOn && clearHidden) input.checked = false;
+    input.disabled = !checklistEnabled || doesNotPowerOn;
+    if ((!checklistEnabled || doesNotPowerOn) && clearHidden) input.checked = false;
+  });
+
+  if (!checklistEnabled && clearHidden) {
+    writeChecklistState('device', DEVICE_CHECKLIST_ITEMS, buildChecklistState(DEVICE_CHECKLIST_ITEMS));
+  }
+}
+
+function updateAccessoryChecklistVisibility({ clearHidden = false } = {}) {
+  const checklistEnabled = isChecklistEnabled('accessory');
+  const card = getChecklistCard('accessory');
+  const options = card?.querySelector('.checklist-options');
+
+  if (card) {
+    card.classList.toggle('is-collapsed', !checklistEnabled);
+  }
+  if (options) {
+    options.classList.toggle('is-hidden-block', !checklistEnabled);
+  }
+
+  ACCESSORY_CHECKLIST_ITEMS.forEach((item) => {
+    const input = getChecklistInput('accessory', item.key);
+    if (!input) return;
+    input.disabled = !checklistEnabled;
+    if (!checklistEnabled && clearHidden) input.checked = false;
   });
 }
 
@@ -177,6 +228,8 @@ function loadOrders() {
       ...o,
       price: Number(o.price) || 0,
       cost: Number(o.cost) || 0,
+      deviceChecklistEnabled: Boolean(o.deviceChecklistEnabled),
+      accessoryChecklistEnabled: Boolean(o.accessoryChecklistEnabled),
       deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, o.deviceChecklist),
       accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, o.accessoryChecklist),
     }));
@@ -244,6 +297,8 @@ function createOrderObject({
   customerName,
   phone = '',
   customerDocument = '',
+  deviceChecklistEnabled = false,
+  accessoryChecklistEnabled = false,
   deviceChecklist = buildChecklistState(DEVICE_CHECKLIST_ITEMS),
   accessoryChecklist = buildChecklistState(ACCESSORY_CHECKLIST_ITEMS),
   device,
@@ -259,6 +314,8 @@ function createOrderObject({
     customerName,
     phone,
     customerDocument,
+    deviceChecklistEnabled: Boolean(deviceChecklistEnabled),
+    accessoryChecklistEnabled: Boolean(accessoryChecklistEnabled),
     deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, deviceChecklist),
     accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, accessoryChecklist),
     device,
@@ -494,15 +551,29 @@ function buildOrderPdfLines(order, title = 'Ordem de Servico') {
     `Criada em: ${order.createdAt ? formatDate(order.createdAt) : '-'}`,
     `Atualizada em: ${order.updatedAt ? formatDate(order.updatedAt) : '-'}`,
     '',
-    'Checklist do aparelho:',
-    ...(deviceChecklistLabels.length ? deviceChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado']),
-    '',
-    'Perifericos recebidos:',
-    ...(accessoryChecklistLabels.length ? accessoryChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado']),
-    '',
     'Assinatura do cliente: ______________________________',
     `Assinatura da loja: ${sanitizePdfText(settings.shopName || 'Assistencia Tecnica')} __________________`,
   ];
+
+  if (order.deviceChecklistEnabled) {
+    lines.splice(
+      lines.length - 2,
+      0,
+      '',
+      'Checklist do aparelho:',
+      ...(deviceChecklistLabels.length ? deviceChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado'])
+    );
+  }
+
+  if (order.accessoryChecklistEnabled) {
+    lines.splice(
+      lines.length - 2,
+      0,
+      '',
+      'Perifericos recebidos:',
+      ...(accessoryChecklistLabels.length ? accessoryChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado'])
+    );
+  }
 
   return lines.flatMap((line) => wrapPdfLine(line));
 }
@@ -689,16 +760,23 @@ function printOrder(order, title = 'Ordem de Serviço') {
     )
     .join('');
 
-  const deviceChecklistBlock = renderPrintChecklist(
-    'Checklist do Aparelho',
-    DEVICE_CHECKLIST_ITEMS,
-    buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
-  );
-  const accessoryChecklistBlock = renderPrintChecklist(
-    'Periféricos Recebidos',
-    ACCESSORY_CHECKLIST_ITEMS,
-    buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
-  );
+  const deviceChecklistBlock = order.deviceChecklistEnabled
+    ? renderPrintChecklist(
+        'Checklist do Aparelho',
+        DEVICE_CHECKLIST_ITEMS,
+        buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+      )
+    : '';
+  const accessoryChecklistBlock = order.accessoryChecklistEnabled
+    ? renderPrintChecklist(
+        'Periféricos Recebidos',
+        ACCESSORY_CHECKLIST_ITEMS,
+        buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+      )
+    : '';
+  const printChecklistSection = deviceChecklistBlock || accessoryChecklistBlock
+    ? `<div class="print-checklists">${deviceChecklistBlock}${accessoryChecklistBlock}</div>`
+    : '';
 
   const signatures = `
       <div class="signatures">
@@ -721,10 +799,7 @@ function printOrder(order, title = 'Ordem de Serviço') {
         ${shopBlock ? `<div class="shop">${shopBlock}</div>` : ''}
         <h1>${title}</h1>
         ${rows}
-        <div class="print-checklists">
-          ${deviceChecklistBlock}
-          ${accessoryChecklistBlock}
-        </div>
+        ${printChecklistSection}
         ${signatures}
       </div>`;
 
@@ -994,9 +1069,12 @@ function clearForm() {
   els.form.reset();
   formFields.price.dataset.raw = 0;
   formFields.cost.dataset.raw = 0;
+  setChecklistEnabled('device', false);
+  setChecklistEnabled('accessory', false);
   writeChecklistState('device', DEVICE_CHECKLIST_ITEMS, buildChecklistState(DEVICE_CHECKLIST_ITEMS));
   writeChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS, buildChecklistState(ACCESSORY_CHECKLIST_ITEMS));
   updateDeviceChecklistVisibility({ clearHidden: true });
+  updateAccessoryChecklistVisibility({ clearHidden: true });
 }
 
 function openScreen(target) {
@@ -1032,9 +1110,12 @@ function openForm(editOrder) {
     formatCurrencyInput(formFields.cost);
     formatPhoneInput(formFields.phone);
     formFields.notes.value = editOrder.notes;
+    setChecklistEnabled('device', editOrder.deviceChecklistEnabled);
+    setChecklistEnabled('accessory', editOrder.accessoryChecklistEnabled);
     writeChecklistState('device', DEVICE_CHECKLIST_ITEMS, buildChecklistState(DEVICE_CHECKLIST_ITEMS, editOrder.deviceChecklist));
     writeChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS, buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, editOrder.accessoryChecklist));
     updateDeviceChecklistVisibility();
+    updateAccessoryChecklistVisibility();
   } else {
     clearForm();
   }
@@ -1056,20 +1137,24 @@ function openDetail(id) {
   const historyToggleButton = showToggleHistory
     ? `<button data-action="toggle-history" class="ghost-btn history-toggle-btn">${detailHistoryExpanded ? 'Ver menos' : 'Ver mais'}</button>`
     : '';
-  const deviceChecklistSummary = renderChecklistSummary(
-    'Checklist do aparelho',
-    getCheckedChecklistLabels(
-      DEVICE_CHECKLIST_ITEMS,
-      buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
-    )
-  );
-  const accessoryChecklistSummary = renderChecklistSummary(
-    'Periféricos recebidos',
-    getCheckedChecklistLabels(
-      ACCESSORY_CHECKLIST_ITEMS,
-      buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
-    )
-  );
+  const deviceChecklistSummary = order.deviceChecklistEnabled
+    ? renderChecklistSummary(
+        'Checklist do aparelho',
+        getCheckedChecklistLabels(
+          DEVICE_CHECKLIST_ITEMS,
+          buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+        )
+      )
+    : '';
+  const accessoryChecklistSummary = order.accessoryChecklistEnabled
+    ? renderChecklistSummary(
+        'Periféricos recebidos',
+        getCheckedChecklistLabels(
+          ACCESSORY_CHECKLIST_ITEMS,
+          buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+        )
+      )
+    : '';
 
   els.detailContent.innerHTML = `
     <div class="detail-grid">
@@ -1280,8 +1365,12 @@ async function handleSubmit(event) {
     customerName: formFields.customerName.value.trim(),
     phone: parsePhone(formFields.phone.value),
     customerDocument: formFields.customerDocument.value.trim(),
+    deviceChecklistEnabled: isChecklistEnabled('device'),
+    accessoryChecklistEnabled: isChecklistEnabled('accessory'),
     deviceChecklist: getDeviceChecklistStateFromForm(),
-    accessoryChecklist: readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS),
+    accessoryChecklist: isChecklistEnabled('accessory')
+      ? readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS)
+      : buildChecklistState(ACCESSORY_CHECKLIST_ITEMS),
     device: formFields.device.value.trim(),
     issue: formFields.issue.value.trim(),
     price: parseCurrency(formFields.price.value),
@@ -1326,8 +1415,12 @@ function getFormOrderLike() {
     customerName: formFields.customerName.value.trim() || '(sem nome)',
     phone: parsePhone(formFields.phone.value),
     customerDocument: formFields.customerDocument.value.trim() || '-',
+    deviceChecklistEnabled: isChecklistEnabled('device'),
+    accessoryChecklistEnabled: isChecklistEnabled('accessory'),
     deviceChecklist: getDeviceChecklistStateFromForm(),
-    accessoryChecklist: readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS),
+    accessoryChecklist: isChecklistEnabled('accessory')
+      ? readChecklistState('accessory', ACCESSORY_CHECKLIST_ITEMS)
+      : buildChecklistState(ACCESSORY_CHECKLIST_ITEMS),
     device: formFields.device.value.trim() || '-',
     issue: formFields.issue.value.trim() || '-',
     price: parseCurrency(formFields.price.value),
@@ -1563,6 +1656,12 @@ function bindEvents() {
   formFields.phone.addEventListener('blur', () => formatPhoneInput(formFields.phone));
   els.settingsFields.shopPhone.addEventListener('input', () => formatPhoneInput(els.settingsFields.shopPhone));
   els.settingsFields.shopPhone.addEventListener('blur', () => formatPhoneInput(els.settingsFields.shopPhone));
+  document.querySelectorAll('input[name="deviceChecklistEnabled"]').forEach((input) => {
+    input.addEventListener('change', () => updateDeviceChecklistVisibility({ clearHidden: true }));
+  });
+  document.querySelectorAll('input[name="accessoryChecklistEnabled"]').forEach((input) => {
+    input.addEventListener('change', () => updateAccessoryChecklistVisibility({ clearHidden: true }));
+  });
   getChecklistInput('device', 'doesNotPowerOn')?.addEventListener('change', () => {
     updateDeviceChecklistVisibility({ clearHidden: true });
   });
@@ -1574,6 +1673,7 @@ function start() {
   bindEvents();
   initNavigation();
   updateDeviceChecklistVisibility({ clearHidden: true });
+  updateAccessoryChecklistVisibility({ clearHidden: true });
   renderOrders();
   updateFinance();
 }

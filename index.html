@@ -1,299 +1,539 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assistência Técnica - OS</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="shortcut icon" href="assets/img/favicon.png" type="image/x-icon">
-</head>
-<body>
-  <div id="app" class="home-header-active">
-    <header class="topbar">
-      <div class="brand">
-        <img src="assets/img/logo.png" alt="AD.Dev" class="logo">
-      </div>
-    </header>
-
-    <main>
-      <!-- Lista de OS -->
-      <section id="listView" class="screen active">
-        <div class="toolbar">
-          <div class="search">
-            <input type="search" id="searchInput" placeholder="Buscar por cliente ou aparelho" aria-label="Buscar">
-          </div>
-          <div class="filter-group" role="group" aria-label="Filtrar por status">
-            <button class="filter-btn active" data-status="">Todos</button>
-            <button class="filter-btn" data-status="Aguardando">Aguardando</button>
-            <button class="filter-btn" data-status="Em andamento">Em andamento</button>
-            <button class="filter-btn" data-status="Finalizado">Finalizado</button>
-          </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistência Técnica - OS</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="shortcut icon"
+      href="assets/img/favicon.png"
+      type="image/x-icon"
+    />
+  </head>
+  <body>
+    <div id="app" class="home-header-active">
+      <header class="topbar">
+        <div class="brand">
+          <img src="assets/img/logo.png" alt="AD.Dev" class="logo" />
         </div>
-        <h2 class="section-title">Lista de OS</h2>
-        <div id="ordersList" class="orders-container"></div>
-      </section>
+      </header>
 
-      <!-- Formulário Nova/Editar OS -->
-      <section id="formView" class="screen">
-        <header class="section-header">
-          <h2 id="formTitle">Nova OS</h2>
-          <button id="closeForm" class="ghost-btn">✕</button>
-        </header>
-        <div class="form-hero">
-          <p class="form-eyebrow">Atendimento</p>
-          <h3>Abra uma nova ordem de serviço com mais organização</h3>
-          <p class="form-copy">Preencha os dados principais do cliente, do aparelho e do orçamento em uma tela mais clara e confortável.</p>
-        </div>
-        <form id="orderForm" class="order-form" autocomplete="off">
+      <main>
+        <!-- Lista de OS -->
+        <section id="listView" class="screen active">
+          <div class="toolbar">
+            <div class="search">
+              <input
+                type="search"
+                id="searchInput"
+                placeholder="Buscar por cliente ou aparelho"
+                aria-label="Buscar"
+              />
+            </div>
+            <div
+              class="filter-group"
+              role="group"
+              aria-label="Filtrar por status"
+            >
+              <button class="filter-btn active" data-status="">Todos</button>
+              <button class="filter-btn" data-status="Aguardando">
+                Aguardando
+              </button>
+              <button class="filter-btn" data-status="Em andamento">
+                Em andamento
+              </button>
+              <button class="filter-btn" data-status="Finalizado">
+                Finalizado
+              </button>
+            </div>
+          </div>
+          <h2 class="section-title">Lista de OS</h2>
+          <div id="ordersList" class="orders-container"></div>
+        </section>
+
+        <!-- Formulário Nova/Editar OS -->
+        <section id="formView" class="screen">
+          <header class="section-header">
+            <h2 id="formTitle">Nova OS</h2>
+            <button id="closeForm" class="ghost-btn">✕</button>
+          </header>
+          <div class="form-hero">
+            <p class="form-eyebrow">Atendimento</p>
+            <h3>Abra uma nova ordem de serviço com mais organização</h3>
+            <p class="form-copy">
+              Preencha os dados principais do cliente, do aparelho e do
+              orçamento em uma tela mais clara e confortável.
+            </p>
+          </div>
+          <form id="orderForm" class="order-form" autocomplete="off">
             <div class="form-grid">
-              <label class="form-field">Nome do cliente:
-                <input type="text" id="customerName" required>
+              <label class="form-field"
+                >Nome do cliente:
+                <input type="text" id="customerName" required />
               </label>
-              <label>Número de telefone:
-                <input type="tel" id="phone">
+              <label
+                >Número de telefone:
+                <input type="tel" id="phone" />
               </label>
-              <label class="form-field">Documento do cliente:
-                <input type="text" id="customerDocument" placeholder="CPF ou RG (opcional)" autocomplete="off">
+              <label class="form-field"
+                >Documento do cliente:
+                <input
+                  type="text"
+                  id="customerDocument"
+                  placeholder="CPF ou RG (opcional)"
+                  autocomplete="off"
+                />
               </label>
-              <label class="form-field">Modelo do aparelho:
-                <input type="text" id="device" required>
+              <label class="form-field"
+                >Modelo do aparelho:
+                <input type="text" id="device" required />
               </label>
-              <label class="form-field form-field-wide">Defeito Relatado:
+              <label class="form-field form-field-wide"
+                >Defeito Relatado:
                 <textarea id="issue" rows="2" required></textarea>
               </label>
-              <label class="form-field">Valor (R$):
-                <input type="text" id="price" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+              <label class="form-field"
+                >Valor (R$):
+                <input
+                  type="text"
+                  id="price"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  placeholder="R$ 0,00"
+                />
               </label>
-              <label class="form-field">Custo (R$):
-                <input type="text" id="cost" inputmode="decimal" autocomplete="off" placeholder="R$ 0,00">
+              <label class="form-field"
+                >Custo (R$):
+                <input
+                  type="text"
+                  id="cost"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  placeholder="R$ 0,00"
+                />
               </label>
-              <label>Observações:
+              <label
+                >Observações:
                 <textarea id="notes" rows="2"></textarea>
               </label>
-              <div class="checklist-card form-grid-full">
+              <div
+                class="checklist-card form-grid-full"
+                data-checklist-card="device"
+              >
                 <div class="checklist-heading">
-                  <p class="checklist-eyebrow">Checklist opcional</p>
-                  <h4>Estado do aparelho</h4>
+                  <div>
+                    <p class="checklist-eyebrow">Checklist opcional</p>
+                    <h4>Estado do aparelho</h4>
+                  </div>
+                  <div
+                    class="checklist-toggle"
+                    role="radiogroup"
+                    aria-label="Usar checklist do estado do aparelho"
+                  >
+                    <label class="checklist-toggle-option">
+                      <input
+                        type="radio"
+                        name="deviceChecklistEnabled"
+                        value="false"
+                        checked
+                      />
+                      <span>Não usar</span>
+                    </label>
+                    <label class="checklist-toggle-option">
+                      <input
+                        type="radio"
+                        name="deviceChecklistEnabled"
+                        value="true"
+                      />
+                      <span>Usar</span>
+                    </label>
+                  </div>
                 </div>
                 <div class="checklist-options">
                   <label class="check-option">
-                    <input type="checkbox" id="deviceDoesNotPowerOn" data-checklist="device" value="doesNotPowerOn">
+                    <input
+                      type="checkbox"
+                      id="deviceDoesNotPowerOn"
+                      data-checklist="device"
+                      value="doesNotPowerOn"
+                    />
                     <span>Aparelho não liga</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="device" value="screenCracked">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="screenCracked"
+                    />
                     <span>Tela trincada</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="device" value="backCoverDamaged">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="backCoverDamaged"
+                    />
                     <span>Tampa traseira riscada/quebrada</span>
                   </label>
                   <label class="check-option" data-power-required="true">
-                    <input type="checkbox" data-checklist="device" value="touchWorking">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="touchWorking"
+                    />
                     <span>Touch funcionando</span>
                   </label>
                   <label class="check-option" data-power-required="true">
-                    <input type="checkbox" data-checklist="device" value="displayWorking">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="displayWorking"
+                    />
                     <span>Imagem no display</span>
                   </label>
                   <label class="check-option" data-power-required="true">
-                    <input type="checkbox" data-checklist="device" value="camerasWorking">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="camerasWorking"
+                    />
                     <span>Câmeras funcionando</span>
                   </label>
                   <label class="check-option" data-power-required="true">
-                    <input type="checkbox" data-checklist="device" value="buttonsWorking">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="buttonsWorking"
+                    />
                     <span>Botões funcionando</span>
                   </label>
                   <label class="check-option" data-power-required="true">
-                    <input type="checkbox" data-checklist="device" value="chargingWorking">
+                    <input
+                      type="checkbox"
+                      data-checklist="device"
+                      value="chargingWorking"
+                    />
                     <span>Carregamento funcionando</span>
                   </label>
                 </div>
               </div>
-              <div class="checklist-card form-grid-full">
+              <div
+                class="checklist-card form-grid-full"
+                data-checklist-card="accessory"
+              >
                 <div class="checklist-heading">
-                  <p class="checklist-eyebrow">Checklist opcional</p>
-                  <h4>Periféricos recebidos</h4>
+                  <div>
+                    <p class="checklist-eyebrow">Checklist opcional</p>
+                    <h4>Periféricos recebidos</h4>
+                  </div>
+                </div>
+                <div
+                  class="checklist-toggle"
+                  role="radiogroup"
+                  aria-label="Usar checklist de acessórios"
+                >
+                  <label class="checklist-toggle-option">
+                    <input
+                      type="radio"
+                      name="accessoryChecklistEnabled"
+                      value="false"
+                      checked
+                    />
+                    <span>Não usar</span>
+                  </label>
+                  <label class="checklist-toggle-option">
+                    <input
+                      type="radio"
+                      name="accessoryChecklistEnabled"
+                      value="true"
+                    />
+                    <span>Usar</span>
+                  </label>
                 </div>
                 <div class="checklist-options">
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="chip">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="chip"
+                    />
                     <span>Chip</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="capa">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="capa"
+                    />
                     <span>Capa</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="pelicula">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="pelicula"
+                    />
                     <span>Película</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="carregador">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="carregador"
+                    />
                     <span>Carregador</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="caboUsb">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="caboUsb"
+                    />
                     <span>Cabo USB</span>
                   </label>
                   <label class="check-option">
-                    <input type="checkbox" data-checklist="accessory" value="cartaoMemoria">
+                    <input
+                      type="checkbox"
+                      data-checklist="accessory"
+                      value="cartaoMemoria"
+                    />
                     <span>Cartão de memória</span>
                   </label>
                 </div>
               </div>
             </div>
             <div class="form-actions">
-              <button type="button" id="cancelForm" class="ghost-btn">Cancelar</button>
-              <button type="button" id="sharePdfForm" class="ghost-btn whatsapp-pdf-btn">Whats PDF</button>
-              <button type="button" id="printForm" class="ghost-btn">Imprimir</button>
+              <button type="button" id="cancelForm" class="ghost-btn">
+                Cancelar
+              </button>
+              <button
+                type="button"
+                id="sharePdfForm"
+                class="ghost-btn whatsapp-pdf-btn"
+              >
+                Whats PDF
+              </button>
+              <button type="button" id="printForm" class="ghost-btn">
+                Imprimir
+              </button>
               <button type="submit" class="primary-btn">Salvar</button>
             </div>
-        </form>
-      </section>
+          </form>
+        </section>
 
-      <!-- Detalhe da OS -->
-      <section id="detailView" class="screen">
-        <header class="section-header">
-          <h2>Detalhes da OS</h2>
-          <button id="closeDetail" class="ghost-btn">✕</button>
-        </header>
-        <div id="detailContent" class="detail-card"></div>
-      </section>
+        <!-- Detalhe da OS -->
+        <section id="detailView" class="screen">
+          <header class="section-header">
+            <h2>Detalhes da OS</h2>
+            <button id="closeDetail" class="ghost-btn">✕</button>
+          </header>
+          <div id="detailContent" class="detail-card"></div>
+        </section>
 
-      <!-- Financeiro -->
-      <section id="financeView" class="screen">
-        <header class="section-header">
-          <h2>Financeiro</h2>
-          <button id="closeFinance" class="ghost-btn">✕</button>
-        </header>
-        <div class="finance-hero">
-          <p class="finance-eyebrow">Visão rápida</p>
-          <h3>Receita, custo e lucro mais claros no seu fechamento</h3>
-          <p class="finance-copy">Acompanhe o desempenho do dia, da semana e do mês com destaque visual para o que entra e o que sai.</p>
-        </div>
-        <div class="finance-grid">
-          <div class="stat finance-stat">
-            <p>Hoje</p>
-            <strong id="totalDay" class="finance-total">R$ 0,00</strong>
-            <small id="costDay" class="finance-line finance-cost">Custo: R$ 0,00</small>
-            <small id="profitDay" class="finance-line finance-profit">Lucro: R$ 0,00</small>
+        <!-- Financeiro -->
+        <section id="financeView" class="screen">
+          <header class="section-header">
+            <h2>Financeiro</h2>
+            <button id="closeFinance" class="ghost-btn">✕</button>
+          </header>
+          <div class="finance-hero">
+            <p class="finance-eyebrow">Visão rápida</p>
+            <h3>Receita, custo e lucro mais claros no seu fechamento</h3>
+            <p class="finance-copy">
+              Acompanhe o desempenho do dia, da semana e do mês com destaque
+              visual para o que entra e o que sai.
+            </p>
           </div>
-          <div class="stat finance-stat">
-            <p>Semana</p>
-            <strong id="totalWeek" class="finance-total">R$ 0,00</strong>
-            <small id="costWeek" class="finance-line finance-cost">Custo: R$ 0,00</small>
-            <small id="profitWeek" class="finance-line finance-profit">Lucro: R$ 0,00</small>
+          <div class="finance-grid">
+            <div class="stat finance-stat">
+              <p>Hoje</p>
+              <strong id="totalDay" class="finance-total">R$ 0,00</strong>
+              <small id="costDay" class="finance-line finance-cost"
+                >Custo: R$ 0,00</small
+              >
+              <small id="profitDay" class="finance-line finance-profit"
+                >Lucro: R$ 0,00</small
+              >
+            </div>
+            <div class="stat finance-stat">
+              <p>Semana</p>
+              <strong id="totalWeek" class="finance-total">R$ 0,00</strong>
+              <small id="costWeek" class="finance-line finance-cost"
+                >Custo: R$ 0,00</small
+              >
+              <small id="profitWeek" class="finance-line finance-profit"
+                >Lucro: R$ 0,00</small
+              >
+            </div>
+            <div class="stat finance-stat">
+              <p>Mês</p>
+              <strong id="totalMonth" class="finance-total">R$ 0,00</strong>
+              <small id="costMonth" class="finance-line finance-cost"
+                >Custo: R$ 0,00</small
+              >
+              <small id="profitMonth" class="finance-line finance-profit"
+                >Lucro: R$ 0,00</small
+              >
+            </div>
           </div>
-          <div class="stat finance-stat">
-            <p>Mês</p>
-            <strong id="totalMonth" class="finance-total">R$ 0,00</strong>
-            <small id="costMonth" class="finance-line finance-cost">Custo: R$ 0,00</small>
-            <small id="profitMonth" class="finance-line finance-profit">Lucro: R$ 0,00</small>
-          </div>
-        </div>
-        <h3>Serviços finalizados</h3>
-        <div id="financeList" class="finance-container"></div>
-      </section>
+          <h3>Serviços finalizados</h3>
+          <div id="financeList" class="finance-container"></div>
+        </section>
 
-      <!-- Configurações -->
-      <section id="settingsView" class="screen">
-        <header class="section-header">
-          <h2>Perfil da Loja</h2>
-          <button data-target="listView" class="ghost-btn close-settings">✕</button>
-        </header>
-        <div class="profile-card">
-          <div class="profile-header">
-            <div class="profile-avatar">
-              <img id="profileAvatar" src="assets/img/perfil-sem-foto.jpg" alt="Logo" class="avatar-img">
-            </div>
-            <div class="profile-info">
-              <h3 id="profileName">Nome da Loja</h3>
-              <p id="profileAddress">Endereço</p>
-            </div>
-            <button id="editSettings" class="edit-btn">Editar</button>
-          </div>
-          <div class="profile-details">
-            <div class="detail-item">
-              <span class="detail-label">Telefone:</span>
-              <span id="profilePhone">-</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Instagram:</span>
-              <span id="profileInstagram">-</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Facebook:</span>
-              <span id="profileFacebook">-</span>
-            </div>
-          </div>
-        </div>
-        <form id="settingsForm" class="settings-form hidden" autocomplete="off">
-          <div class="form-card">
-            <div class="form-header">
-              <div>
-                <h2>Editar Perfil</h2>
-                <p>Atualize as informações da sua loja</p>
+        <!-- Configurações -->
+        <section id="settingsView" class="screen">
+          <header class="section-header">
+            <h2>Perfil da Loja</h2>
+            <button data-target="listView" class="ghost-btn close-settings">
+              ✕
+            </button>
+          </header>
+          <div class="profile-card">
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <img
+                  id="profileAvatar"
+                  src="assets/img/perfil-sem-foto.jpg"
+                  alt="Logo"
+                  class="avatar-img"
+                />
               </div>
-              <button type="button" class="close-settings ghost-btn" aria-label="Fechar">✕</button>
+              <div class="profile-info">
+                <h3 id="profileName">Nome da Loja</h3>
+                <p id="profileAddress">Endereço</p>
+              </div>
+              <button id="editSettings" class="edit-btn">Editar</button>
             </div>
-            <div class="form-grid">
-              <label>Nome da loja
-                <input type="text" id="shopName" placeholder="Assistência Exemplo">
-              </label>
-              <label>Endereço
-                <input type="text" id="shopAddress" placeholder="Rua, número, bairro, cidade">
-              </label>
-              <label>Telefone
-                <input type="tel" id="shopPhone" placeholder="(00) 00000-0000">
-              </label>
-              <label>Instagram
-                <input type="text" id="shopInstagram" placeholder="@usuario">
-              </label>
-              <label>Facebook
-                <input type="text" id="shopFacebook" placeholder="facebook.com/sua-pagina">
-              </label>
-              <label>Logo da loja
-                <input type="file" id="shopLogoFile" accept="image/*">
-              </label>
-            </div>
-            <div class="form-actions">
-              <button type="button" id="cancelSettings" class="ghost-btn">Cancelar</button>
-              <button type="submit" id="saveSettings" class="primary-btn">Salvar</button>
+            <div class="profile-details">
+              <div class="detail-item">
+                <span class="detail-label">Telefone:</span>
+                <span id="profilePhone">-</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Instagram:</span>
+                <span id="profileInstagram">-</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Facebook:</span>
+                <span id="profileFacebook">-</span>
+              </div>
             </div>
           </div>
-        </form>
-      </section>
-    </main>
+          <form
+            id="settingsForm"
+            class="settings-form hidden"
+            autocomplete="off"
+          >
+            <div class="form-card">
+              <div class="form-header">
+                <div>
+                  <h2>Editar Perfil</h2>
+                  <p>Atualize as informações da sua loja</p>
+                </div>
+                <button
+                  type="button"
+                  class="close-settings ghost-btn"
+                  aria-label="Fechar"
+                >
+                  ✕
+                </button>
+              </div>
+              <div class="form-grid">
+                <label
+                  >Nome da loja
+                  <input
+                    type="text"
+                    id="shopName"
+                    placeholder="Assistência Exemplo"
+                  />
+                </label>
+                <label
+                  >Endereço
+                  <input
+                    type="text"
+                    id="shopAddress"
+                    placeholder="Rua, número, bairro, cidade"
+                  />
+                </label>
+                <label
+                  >Telefone
+                  <input
+                    type="tel"
+                    id="shopPhone"
+                    placeholder="(00) 00000-0000"
+                  />
+                </label>
+                <label
+                  >Instagram
+                  <input
+                    type="text"
+                    id="shopInstagram"
+                    placeholder="@usuario"
+                  />
+                </label>
+                <label
+                  >Facebook
+                  <input
+                    type="text"
+                    id="shopFacebook"
+                    placeholder="facebook.com/sua-pagina"
+                  />
+                </label>
+                <label
+                  >Logo da loja
+                  <input type="file" id="shopLogoFile" accept="image/*" />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="cancelSettings" class="ghost-btn">
+                  Cancelar
+                </button>
+                <button type="submit" id="saveSettings" class="primary-btn">
+                  Salvar
+                </button>
+              </div>
+            </div>
+          </form>
+        </section>
+      </main>
 
-    <!-- Navegação inferior -->
-    <nav class="bottom-nav">
-      <button data-target="listView" class="nav-btn active" aria-label="Home">
-        <span class="nav-label">Início</span>
-      </button>
-      <button data-target="formView" class="nav-btn" aria-label="Nova OS">
-        <span class="nav-label">Nova OS</span>
-      </button>
-      <button data-target="financeView" class="nav-btn" aria-label="Financeiro">
-        <span class="nav-label">Saldo</span>
-      </button>
-      <button data-target="settingsView" class="nav-btn" aria-label="Configurações">
-        <span class="nav-label">Perfil</span>
-      </button>
-    </nav>
-  </div>
+      <!-- Navegação inferior -->
+      <nav class="bottom-nav">
+        <button data-target="listView" class="nav-btn active" aria-label="Home">
+          <span class="nav-label">Início</span>
+        </button>
+        <button data-target="formView" class="nav-btn" aria-label="Nova OS">
+          <span class="nav-label">Nova OS</span>
+        </button>
+        <button
+          data-target="financeView"
+          class="nav-btn"
+          aria-label="Financeiro"
+        >
+          <span class="nav-label">Saldo</span>
+        </button>
+        <button
+          data-target="settingsView"
+          class="nav-btn"
+          aria-label="Configurações"
+        >
+          <span class="nav-label">Perfil</span>
+        </button>
+      </nav>
+    </div>
 
-  <!-- Modal de alert/confirm -->
-  <div id="modalOverlay" class="modal-overlay hidden" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
-      <div class="modal-body" id="modalMessage"></div>
-      <div class="modal-actions">
-        <button id="modalCancel" class="ghost-btn">Cancelar</button>
-        <button id="modalOk" class="primary-btn">OK</button>
+    <!-- Modal de alert/confirm -->
+    <div id="modalOverlay" class="modal-overlay hidden" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true">
+        <div class="modal-body" id="modalMessage"></div>
+        <div class="modal-actions">
+          <button id="modalCancel" class="ghost-btn">Cancelar</button>
+          <button id="modalOk" class="primary-btn">OK</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script src="script.js"></script>
-</body>
+    <script src="script.js"></script>
+  </body>
 </html>
