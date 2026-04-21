@@ -1,0 +1,52 @@
+PROMPT UNIVERSAL PARA COPILOT (GERAR E EDITAR CÓDIGO AUTOMATICAMENTE)
+
+CONTEXTO DO PROJETO:
+Estou desenvolvendo um SaaS de assistência técnica (ordens de serviço) usando HTML, CSS, JavaScript puro e Firebase. O frontend já está funcional e agora preciso integrar autenticação, banco de dados e regras de negócio.
+
+OBJETIVO:
+Gerar ou editar código diretamente no projeto, de forma funcional, simples e escalável, pronto para produção (MVP).
+
+TAREFA:
+Criar sistema de login com Firebase Auth neste arquivo. 
+Deve incluir login, cadastro, logout e persistência de sessão. 
+Usar JavaScript puro e manter compatibilidade com o sistema atual.
+vou te mandar a altenticao e as conecoes certas do firebase depois, mas faz tudo completo 
+
+INSTRUÇÕES DE EXECUÇÃO:
+
+* Gere código completo e funcional
+* Se necessário, MODIFIQUE o código existente (não apenas sugira)
+* Mantenha consistência com o código atual
+* Não quebre funcionalidades já existentes
+* Reutilize funções sempre que possível
+
+PADRÕES TÉCNICOS:
+
+* JavaScript puro (sem frameworks)
+* Firebase Auth + Firestore
+* Estrutura multiusuário (empresaId = uid)
+* Código organizado em funções reutilizáveis
+
+REGRAS IMPORTANTES:
+
+* Evitar leituras desnecessárias no Firebase
+* Priorizar performance e baixo custo
+* Validar dados antes de salvar
+* Garantir segurança básica (usuário só acessa seus dados)
+
+FORMATO DA RESPOSTA:
+
+* Código direto no arquivo
+* Comentários explicando apenas o essencial
+* Sem explicações longas fora do código
+
+EXTRA:
+Se existir uma forma mais simples ou mais eficiente, aplique diretamente no código.
+
+RESULTADO ESPERADO:
+Código pronto, integrado ao projeto, funcionando sem necessidade de ajustes manuais.
+
+Seja direto e econômico.
+Não gere explicações longas.
+Gere apenas o código necessário.
+Evite repetir código já existente.

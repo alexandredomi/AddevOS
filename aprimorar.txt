@@ -1,3 +1,159 @@
-1- adicionar tempo de garantia regras da OS no perfil para ser imprimido junto com a os 
+MVP SAAS ADDEVOS
+MVP SAAS ADDEVOS — CHECKLIST COMPLETO PARA LANÇAMENTO (500–1000 USUÁRIOS)
 
-1- sempre quando carregar a pagina inicial e o perfil for igual ao defout ele pede para configurar o perfil para imprimir os certa 
+FASE 1 — BASE DO PROJETO (OBRIGATÓRIO)
+[ ] Criar conta no Firebase
+[ ] Criar projeto (modo produção)
+[ ] Ativar Authentication (Email/Senha)
+[ ] Criar Firestore Database (modo production)
+[ ] Configurar regras básicas de segurança (NUNCA deixar aberto)
+[ ] Ativar Hosting (para deploy final)
+
+---
+
+FASE 2 — AUTENTICAÇÃO (LOGIN / CADASTRO)
+[ ] Criar tela de login (HTML + JS)
+[ ] Criar tela de cadastro
+[ ] Implementar createUserWithEmailAndPassword
+[ ] Implementar signInWithEmailAndPassword
+[ ] Criar botão de logout
+[ ] Bloquear acesso ao sistema sem login
+[ ] Criar função de persistência de sessão
+
+IMPORTANTE:
+[ ] Após cadastro → criar automaticamente a empresa no banco
+[ ] Usar UID como ID da empresa
+
+---
+
+FASE 3 — ESTRUTURA DO BANCO (ESCALÁVEL E BARATA)
+[ ] Criar coleção: empresas
+[ ] Criar documento: empresaId (igual ao UID)
+[ ] Criar subcoleção: ordens
+
+Estrutura:
+empresas/
+empresaId/
+nome
+plano
+createdAt
+ownerUid
+
+ordens/
+  ordemId/
+    cliente
+    aparelho
+    status
+    valor
+    createdAt
+
+IMPORTANTE:
+[ ] NUNCA misturar dados entre empresas
+[ ] SEMPRE usar caminho com empresaId
+
+---
+
+FASE 4 — INTEGRAÇÃO DO SISTEMA COM FIREBASE
+[ ] Substituir localStorage por Firestore
+[ ] Criar função para salvar OS
+[ ] Criar função para listar OS
+[ ] Criar função para atualizar OS
+[ ] Criar função para deletar OS
+
+OTIMIZAÇÃO:
+[ ] Carregar dados apenas uma vez
+[ ] Criar cache em memória
+[ ] Evitar múltiplas leituras desnecessárias
+
+---
+
+FASE 5 — SEGURANÇA (CRÍTICO)
+[ ] Configurar regras do Firestore:
+
+- Usuário só acessa dados da própria empresa
+- Bloquear leitura sem autenticação
+
+[ ] Validar dados antes de salvar (frontend)
+[ ] Nunca confiar só no frontend (regra no Firebase é essencial)
+
+---
+
+FASE 6 — CONTROLE DE USO (COMEÇO DA MONETIZAÇÃO)
+[ ] Criar campo "plano" na empresa
+[ ] Criar limite de OS (ex: 20 grátis)
+[ ] Bloquear criação ao atingir limite
+[ ] Mostrar aviso de upgrade
+
+EXEMPLO:
+Plano Free → até 20 ordens
+Plano Pro → ilimitado
+
+---
+
+FASE 7 — PERFORMANCE E CUSTO (EVITAR QUEBRAR COM 1K USUÁRIOS)
+[ ] Evitar getDocs em loops
+[ ] Evitar recarregar tudo a cada ação
+[ ] Usar paginação (limitar 20–50 registros)
+[ ] Evitar listeners em tempo real desnecessários
+[ ] Testar uso com múltiplos usuários
+
+---
+
+FASE 8 — TESTES REAIS (ANTES DE LANÇAR)
+[ ] Criar 5 contas diferentes
+[ ] Testar uso simultâneo
+[ ] Testar criação de 100+ ordens
+[ ] Testar login/logout várias vezes
+[ ] Testar erro de conexão
+
+---
+
+FASE 9 — DEPLOY
+[ ] Subir no Firebase Hosting
+[ ] Testar no celular
+[ ] Testar como PWA (atalho na tela inicial)
+[ ] Configurar favicon e ícones
+
+---
+
+FASE 10 — LANÇAMENTO
+[ ] Criar página simples de venda
+[ ] Criar WhatsApp de suporte
+[ ] Criar mensagem padrão de onboarding
+[ ] Liberar acesso para primeiros usuários
+
+---
+
+FASE 11 — PÓS LANÇAMENTO (ESSENCIAL PRA ESCALAR)
+[ ] Monitorar uso no Firebase
+[ ] Ver custo diário
+[ ] Coletar feedback dos usuários
+[ ] Corrigir bugs rapidamente
+[ ] Melhorar UX com base no uso real
+
+---
+
+FASE 12 — RISCOS QUE VOCÊ PRECISA EVITAR
+[ ] Banco desorganizado → impossível escalar
+[ ] Falta de regra de segurança → vazamento de dados
+[ ] Muitas leituras → custo alto
+[ ] Código bagunçado → difícil manutenção
+
+---
+
+OBJETIVO FINAL DO MVP:
+
+- Sistema funcionando 100%
+- Usuário cria conta e usa sozinho
+- Dados seguros e isolados
+- Baixo custo operacional
+- Pronto para vender
+
+---
+
+META REALISTA:
+
+- 50 usuários → validar
+- 100 usuários → ajustar
+- 500 usuários → escalar com controle
+- 1000 usuários → otimizar e automatizar cobrança
