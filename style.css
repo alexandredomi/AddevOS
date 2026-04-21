@@ -38,7 +38,7 @@ body {
 }
 
 .brand { display: flex; align-items: center; gap: 12px; }
-.brand img.logo { width: 140px; }
+.brand img.logo { width: 110px; }
 .brand strong { display: block; letter-spacing: 0.3px; color: var(--primary-strong); }
 .brand small { color: var(--muted); font-size: 12px; }
 
