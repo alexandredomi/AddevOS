@@ -41,6 +41,7 @@ const els = {
   settingsForm: document.getElementById('settingsForm'),
   profileElements: {
     avatar: document.getElementById('profileAvatar'),
+    headerAvatar: document.getElementById('headerProfileAvatar'),
     name: document.getElementById('profileName'),
     address: document.getElementById('profileAddress'),
     phone: document.getElementById('profilePhone'),
@@ -1451,8 +1452,10 @@ function readFileAsDataUrl(file) {
 
 function renderSettings() {
   const settings = loadSettings();
+  const profileImage = settings.shopLogo || DEFAULT_PROFILE_PHOTO;
   // Display in profile
-  els.profileElements.avatar.src = settings.shopLogo || DEFAULT_PROFILE_PHOTO;
+  els.profileElements.avatar.src = profileImage;
+  els.profileElements.headerAvatar.src = profileImage;
   els.profileElements.name.textContent = settings.shopName || 'Nome da Loja';
   els.profileElements.address.textContent = settings.shopAddress || 'Endereço';
   els.profileElements.phone.textContent = settings.shopPhone ? formatPhoneDigits(settings.shopPhone) : '-';
@@ -1672,6 +1675,7 @@ function start() {
   loadSettings();
   bindEvents();
   initNavigation();
+  renderSettings();
   updateDeviceChecklistVisibility({ clearHidden: true });
   updateAccessoryChecklistVisibility({ clearHidden: true });
   renderOrders();

@@ -37,11 +37,41 @@ body {
   display: none;
 }
 
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand img.logo { width: 110px; }
+.brand { display: flex; gap: 12px; justify-content: center; width: max-content;}
+.brand .logo {font-size: 32px; font-weight: 500; width: 110px;}
+.brand .logo .logo-span{ color: var(--primary); font-weight: 800;}
 .brand strong { display: block; letter-spacing: 0.3px; color: var(--primary-strong); }
 .brand small { color: var(--muted); font-size: 12px; }
 
+.perfil-header{
+  border: solid 1px rgb(255, 255, 255);
+  border-radius: 50%;
+  width: 50px;
+}
+.perfil-header img{
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: rgb(225, 225, 225);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout{
+  display: flex;
+  align-items: center;
+}
+.icone-online-perfil-header{
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background-color: #4CAF50;
+  border-radius: 50%;
+  top: px;
+  border: solid 2px rgb(255, 255, 255);
+}
 .header-actions { display: flex; gap: 8px; }
 
 .ghost-btn, .primary-btn, .nav-btn, .fab {
@@ -78,6 +108,12 @@ main { display: grid; gap: 14px; }
   top: 64px;
   z-index: 9;
   padding: 8px 0 10px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .search input, input, textarea {
@@ -122,8 +158,8 @@ input:focus, textarea:focus {
 }
 .filter-btn::before {
   content: '';
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: currentColor;
   mask: var(--icon, none);
   -webkit-mask: var(--icon, none);
@@ -136,12 +172,12 @@ input:focus, textarea:focus {
 }
 .filter-btn[data-status="Em andamento"] {
   background: #fff5d7;
-  color: #b58900;
+  color: #d3a009;
   border-color: rgba(181,137,0,0.25);
 }
 .filter-btn[data-status="Finalizado"] {
   background: #e6f6ec;
-  color: #1f9b56;
+  color: #086e36;
   border-color: rgba(31,155,86,0.25);
 }
 .filter-btn.active {
@@ -164,9 +200,9 @@ input:focus, textarea:focus {
   color: #fff;
 }
 .filter-btn[data-status=""] { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4Zm0 5h16v2H4Zm0 5h10v2H4Z"/></svg>'); }
-.filter-btn[data-status="Aguardando"] { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h10v2l-4 5 4 5v2H7v-2l4-5-4-5Z"/></svg>'); }
-.filter-btn[data-status="Em andamento"] { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-7.07 2.93L3 7h6V1L6.7 3.3A8 8 0 1 0 20 12h2A10 10 0 0 1 12 2Z"/></svg>'); }
-.filter-btn[data-status="Finalizado"] { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9.5 16.17 5.33 12l-1.41 1.41L9.5 19 20.08 8.41 18.67 7l-9.17 9.17Z"/></svg>'); }
+.filter-btn[data-status="Aguardando"] { --icon: url('icones/icone\ ampulheta.png'); }
+.filter-btn[data-status="Em andamento"] { --icon: url('icones/icone\ processo.png'); }
+.filter-btn[data-status="Finalizado"] { --icon: url('icones/icone\ certo.png'); }
 
 .cards {
   display: grid;
@@ -337,8 +373,8 @@ input:focus, textarea:focus {
 }
 .chip::before {
   content: '';
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
   background: currentColor;
   mask: var(--icon, none);
   -webkit-mask: var(--icon, none);
@@ -351,9 +387,9 @@ input:focus, textarea:focus {
 .chip.progress span { display: none; }
 .chip.done { background: rgba(46,204,113,0.16); color: #1f9b56; }
 .chip.done span { display: none; }
-.chip.await { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M7 4h10v2l-4 5 4 5v2H7v-2l4-5-4-5Z"/></svg>'); }
-.chip.progress { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-7.07 2.93L3 7h6V1L6.7 3.3A8 8 0 1 0 20 12h2A10 10 0 0 1 12 2Z"/></svg>'); }
-.chip.done { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9.5 16.17 5.33 12l-1.41 1.41L9.5 19 20.08 8.41 18.67 7l-9.17 9.17Z"/></svg>'); }
+.chip.await { --icon: url('icones/icone\ ampulheta.png'); color: #c53030;}
+.chip.progress { --icon: url('icones/icone\ processo.png'); }
+.chip.done { --icon: url('icones/icone\ certo.png'); }
 
 .meta { color: var(--muted); font-size: 13px; }
 .price { font-weight: 700; color: var(--primary-strong); }
@@ -708,8 +744,8 @@ input:focus, textarea:focus {
 }
 .icon-btn::before {
   content: '';
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   background: currentColor;
   background-repeat: no-repeat;
   background-position: center;
@@ -734,7 +770,6 @@ input:focus, textarea:focus {
 .action-row [data-action="delete"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M9 4h6l1 2h4v2H4V6h4Zm-1 4h2v10H8Zm6 0h2v10h-2ZM6 8h12l-.8 12.4a2 2 0 0 1-2 1.6H8.8a2 2 0 0 1-2-1.6Z"/></svg>'); }
 .contact-row [data-action="whatsapp"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.955 1.23l-.355.184-.368-.093 1.398-5.101a.5.5 0 00-.061-.46 9.993 9.993 0 0114.869 7.5c0 5.522-4.477 10-10 10a9.954 9.954 0 01-5.064-1.371l-.356-.187-.368.092 1.401 5.102a.5.5 0 00.61.396 10 10 0 008.777-17.57z"/></svg>'); }
 .contact-row [data-action="call"].icon-btn { --icon: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24"><path d="M17.92 7.02C19.97 9.29 21.5 12.09 21.5 15.5 21.5 19.96 19.45 23.85 16.02 26.35 15.36 26.89 14.38 26.41 14.63 25.6 15.77 21.91 16.5 18.43 16.5 15.5 16.5 12.57 15.77 9.09 14.63 5.4 14.37 4.59 15.36 4.11 16.02 4.65M1 3v18h15.03c1.66 0 3-1.34 3-3V6c0-1.66-1.34-3-3-3H1m4 9h8v2H5z"/></svg>'); }
-
 
 .modal-overlay {
   position: fixed;
@@ -773,12 +808,31 @@ input:focus, textarea:focus {
   max-height: 100dvh;
   margin: 0;
   overflow-y: auto;
-  background: var(--bg-alt);
+  background: var(--bg);
   border-radius: 0;
   box-shadow: none;
   animation: none;
   padding: 0;
 }
+
+/* style css loading */
+  .loader {
+    width: fit-content;
+    font-size: 40px;
+    line-height: 1.5;
+    font-weight: bold;
+    color: #5967ff00;
+    -webkit-text-stroke: 1px #5967ff;
+    background: radial-gradient(1.13em at 50% 1.6em,#5967ff 99%,#0000 101%) calc(50% - 1.6em) 0/3.2em 100% text, radial-gradient(1.13em at 50% -0.8em,#0000 99%,#5967ff 101%) 50% .8em/3.2em 100% repeat-x  text;
+    animation: l9 2s linear infinite;
+  }
+  .loader:before {
+  content: "Addev Flow";
+  }
+  @keyframes l9 {
+    to {background-position: calc(50% + 1.6em) 0,calc(50% + 3.2em) .8em}
+  }
+
 
 @media (min-width: 640px) {
   .settings-form .form-card {

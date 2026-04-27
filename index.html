@@ -3,11 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Assistência Técnica - OS</title>
+    <title> Addev Flow - Gestao Para Assistência Técnica</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="shortcut icon" href="assets/img/logo addev flow fundo branco sem slogam.jpg" type="image/x-icon"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   </head>
   <body>
+    <!-- Tela de loading -->
+    <div class="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; display: none;">
+      <div class="loader"></div>
+    </div>
     <!-- Tela de login -->
     <div style="display: flex; align-items: center; justify-content: center; padding: 100px 0px; display: none;">
       <div class="login" style="display: flex; justify-content: center; align-items: center;">
@@ -41,8 +46,8 @@
                   space-between; 
                   padding-top: 20px;
                   ">
-                  <a href="cadastro.html" style="color: #6f7bff;">Criar uma conta</a>
-                  <a href="recuperacao.html" style="color: #6f7bff;">Esqueci a senha</a>
+                  <a href="https://wa.me/5553991656605?text=ola%2C%20gostaria%20de%20criar%20uma%20conta%21" target="_blank" style="color: #6f7bff;">Criar uma conta</a>
+                  <a href="https://wa.me/5553991656605?text=ola%2C%20esqueci%20a%20senha%21" target="_blank" style="color: #6f7bff;">Esqueci a senha</a>
               </div>
           </form>
           <div class="contato-suporte" style="display: flex; justify-content: center;">
@@ -57,107 +62,25 @@
         </div>
       </div>
     </div>
-    <!-- Tela de cadastro -->
-    <div style="display: flex; align-items: center; justify-content: center; padding: 100px 0px; display: none;">
-      <div class="login" style="display: flex; justify-content: center; align-items: center;">
-        <div class="center" style="width: 100%; max-width: 400px; padding: 0px auto;">
-          <div class="img-login" style="display: flex; justify-content: center; align-items: center;">
-              <img src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="" style="width: 50%;">
-          </div>
-          <h2>Cadastro</h2>
-          <form action="">
-              <label for="nome">
-                  <p>Nome:</p>
-                  <input type="text">
-              </label>
-              <label for="sobrenome">
-                  <p>Sobrenome:</p>
-                  <input type="text">
-              </label>
-              <label for="usuario">
-                  <p>E-mail</p>
-                  <input type="text">
-              </label>
-              <label for="senha">
-                  <p>Senha</p>
-                  <input type="password">
-              </label>
-              <label for="repetirSenha">
-                  <p>Repetir a senha</p>
-                  <input type="password">
-              </label>
-          <input type="submit" value="Entrar" style="
-                  background: linear-gradient(135deg, var(--primary) 0%, #6f7bff 100%);
-                  color: #fff;
-                  border-radius: 12px;
-                  padding: 12px 16px;
-                  font-weight: 600;
-                  box-shadow: var(--shadow);
-                  margin-top: 20px;
-                  cursor: pointer;
-              ">
-              <div class="links" style="
-                  width: 100%; display: 
-                  flex; justify-content: 
-                  space-between; 
-                  padding-top: 20px;
-                  ">
-                  <a href="login.html" style="color: #6f7bff;">Fazer login</a>
-              </div>
-          </form>
-          <div class="contato-suporte" style="display: flex; justify-content: center;">
-              <a href="https://wa.me/5553991656605?text=ola%2C%20estou%20com%20um%20problema%20com%20o%20login%21" target="_blank" style="
-                      text-transform: uppercase;
-                      letter-spacing: 0.12em;
-                      font-size: 11px;
-                      color: var(--muted);
-                      margin-top: 50px;
-                  ">entrar em contato com o suporte</a>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Tela de recuperacao de conta -->
-    <div class="recuperacao" style="display: flex; align-items: center; justify-content: center; padding: 100px 0px; display: none;">
-      <div class="login" style="display: flex; justify-content: center; align-items: center;">
-        <div class="center" style="width: 100%; max-width: 400px; padding: 0px auto;">
-          <div class="img-login" style="display: flex; justify-content: center; align-items: center;">
-              <img src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="" style="width: 50%;">
-          </div>
-          <h2>Recuperar Conta</h2>
-          <form action="">
-            <label for="usuario">
-                <p>E-mail</p>
-                <input type="text">
-            </label>
-            <input type="submit" value="Entrar" style="
-                    background: linear-gradient(135deg, var(--primary) 0%, #6f7bff 100%);
-                    color: #fff;
-                    border-radius: 12px;
-                    padding: 12px 16px;
-                    font-weight: 600;
-                    box-shadow: var(--shadow);
-                    margin-top: 20px;
-                    cursor: pointer;
-                ">
-            <div class="links" style="
-                width: 100%; display: 
-                flex; justify-content: 
-                space-between; 
-                padding-top: 20px;
-                ">
-                <a href="login.html" style="color: #6f7bff;">Fazer login</a>
-                <a href="https://wa.me/5553991656605?text=ola%2C%20estou%20com%20um%20problema%20com%20o%20login%2" style="color: #6f7bff;">Esqueci meu e-mail</a>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+
     <!-- App -->
     <div id="app" class="home-header-active">
       <header class="topbar">
         <div class="brand">
-          <img src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="logo addev flow" class="logo"/>
+          <img class="logo" src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="Logo ADDEV FLOW ">
+          <!-- <h2 class="logo">ADDEV<span class="logo-span">FLOW</span></h2> -->
+        </div>
+        <div class="brand">
+          <div class="perfil-header">
+            <div class="icone-online-perfil-header"></div>
+            <!-- <img src="assets/img/perfil-sem-foto.jpg" alt="foto perfil logado"> -->
+            <img id="headerProfileAvatar" src="assets/img/perfil-sem-foto.jpg" alt="Foto do perfil logado">
+          </div>
+          <div class="logout">
+            <button id="logoutBtn" class="ghost-btn" aria-label="Sair">
+              Sair  
+            </button>
+          </div>
         </div>
       </header>
 
@@ -166,6 +89,7 @@
         <section id="listView" class="screen active">
           <div class="toolbar">
             <div class="search">
+              <i class="fa-solid fa-magnifying-glass"></i>
               <input
                 type="search"
                 id="searchInput"
@@ -212,11 +136,11 @@
             <div class="form-grid">
               <label class="form-field"
                 >Nome do cliente:
-                <input type="text" id="customerName" required />
+                <input placeholder="Nome completo" type="text" id="customerName" required />
               </label>
               <label
                 >Número de telefone:
-                <input type="tel" id="phone" />
+                <input type="tel" id="phone" placeholder="(00) 00000-0000"/>
               </label>
               <label class="form-field"
                 >Documento do cliente:
@@ -229,11 +153,11 @@
               </label>
               <label class="form-field"
                 >Modelo do aparelho:
-                <input type="text" id="device" required />
+                <input placeholder="Ex: iPhone 12" type="text" id="device" required />
               </label>
               <label class="form-field form-field-wide"
                 >Defeito Relatado:
-                <textarea id="issue" rows="2" required></textarea>
+                <textarea placeholder="Descreva o defeito encontrado" id="issue" rows="2" required></textarea>
               </label>
               <label class="form-field"
                 >Valor (R$):
@@ -257,7 +181,7 @@
               </label>
               <label
                 >Observações:
-                <textarea id="notes" rows="2"></textarea>
+                <textarea placeholder="Observações adicionais (opcional)" id="notes" rows="2"></textarea>
               </label>
               <div
                 class="checklist-card form-grid-full"
