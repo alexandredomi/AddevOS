@@ -233,6 +233,8 @@ function loadOrders() {
       accessoryChecklistEnabled: Boolean(o.accessoryChecklistEnabled),
       deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, o.deviceChecklist),
       accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, o.accessoryChecklist),
+      finalizedAt:
+        o.finalizedAt || (o.status === 'Finalizado' ? o.updatedAt || o.createdAt || '' : ''),
     }));
 
   const seed = [
@@ -327,11 +329,27 @@ function createOrderObject({
     status,
     createdAt: now,
     updatedAt: now,
+    finalizedAt: status === 'Finalizado' ? now : '',
     history: [
       { date: now, action: 'OS criada' },
       { date: now, action: `Status definido: ${status}` },
     ],
   };
+}
+
+function getFinalizedAtForStatusChange(currentOrder, nextStatus, now) {
+  if (nextStatus === 'Finalizado') {
+    if (currentOrder.status === 'Finalizado') {
+      return currentOrder.finalizedAt || currentOrder.updatedAt || currentOrder.createdAt || now;
+    }
+    return now;
+  }
+
+  return '';
+}
+
+function getFinanceReferenceDate(order) {
+  return order.finalizedAt || order.updatedAt || order.createdAt;
 }
 
 function formatCurrency(value) {
@@ -722,78 +740,43 @@ async function sendOrderPdfViaWhatsApp(order, title = 'Ordem de Servico') {
   await alertModal('O PDF foi baixado. Anexe o arquivo no WhatsApp após abrir a conversa.');
 }
 
-function printOrder(order, title = 'Ordem de Serviço') {
-  const settings = getSettingsSnapshot();
-  const logoSrc = settings.shopLogo || DEFAULT_LOGO;
-  const logoHtml = `<img src="${logoSrc}" alt="Logo" style="max-width: 120px; height: auto; margin-bottom: 10px;">`;
-  const shopBlock = [
-    logoHtml,
-    settings.shopName && `<div class="shop-name">${settings.shopName}</div>`,
-    settings.shopAddress && `<div class="shop-line"><strong>Endereço:</strong> ${settings.shopAddress}</div>`,
-    settings.shopPhone && `<div class="shop-line"><strong>Telefone:</strong> ${formatPhoneDigits(settings.shopPhone)}</div>`,
-    settings.shopInstagram && `<div class="shop-line"><strong>Instagram:</strong> ${settings.shopInstagram}</div>`,
-    settings.shopFacebook && `<div class="shop-line"><strong>Facebook:</strong> ${settings.shopFacebook}</div>`,
-  ]
-    .filter(Boolean)
-    .join('');
+function choosePrintLayout() {
+  return new Promise((resolve) => {
+    const { overlay, message: msgEl, ok, cancel } = els.modal;
+    msgEl.innerHTML = `
+      <strong style="display:block; margin-bottom: 8px;">Escolha o formato de impressão</strong>
+      <span>Selecione abaixo se deseja imprimir em folha A4 ou no estilo cupom.</span>
+    `;
 
-  const fields = [
-    { label: 'Cliente', value: order.customerName || '-' },
-    { label: 'Telefone', value: order.phone ? formatPhoneDigits(order.phone) : '-' },
-    { label: 'Documento', value: order.customerDocument || '-' },
-    { label: 'Aparelho', value: order.device || '-' },
-    { label: 'Defeito', value: order.issue || '-' },
-    { label: 'Valor', value: formatCurrency(order.price || 0) },
-    { label: 'Observações', value: order.notes || '-' },
-  ];
+    overlay.classList.remove('hidden');
+    overlay.setAttribute('aria-hidden', 'false');
+    ok.textContent = 'A4';
+    cancel.textContent = 'Cupom';
+    cancel.style.display = 'inline-flex';
 
-  if (order.status) fields.push({ label: 'Status', value: order.status });
-  if (order.createdAt) fields.push({ label: 'Criada em', value: formatDate(order.createdAt) });
-  if (order.updatedAt) fields.push({ label: 'Atualizada em', value: formatDate(order.updatedAt) });
+    function cleanup(result) {
+      overlay.classList.add('hidden');
+      overlay.setAttribute('aria-hidden', 'true');
+      ok.onclick = null;
+      cancel.onclick = null;
+      overlay.onclick = null;
+      document.onkeydown = null;
+      resolve(result);
+    }
 
-  const rows = fields
-    .map(
-      (f) => `
-        <div class="row">
-          <span class="label">${f.label}:</span>
-          <span class="value">${f.value}</span>
-        </div>`
-    )
-    .join('');
+    ok.onclick = () => cleanup('a4');
+    cancel.onclick = () => cleanup('cupom');
+    overlay.onclick = (event) => {
+      if (event.target === overlay) cleanup(null);
+    };
+    document.onkeydown = (event) => {
+      if (event.key === 'Escape') cleanup(null);
+      if (event.key === 'Enter') cleanup('a4');
+    };
+  });
+}
 
-  const deviceChecklistBlock = order.deviceChecklistEnabled
-    ? renderPrintChecklist(
-        'Checklist do Aparelho',
-        DEVICE_CHECKLIST_ITEMS,
-        buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
-      )
-    : '';
-  const accessoryChecklistBlock = order.accessoryChecklistEnabled
-    ? renderPrintChecklist(
-        'Periféricos Recebidos',
-        ACCESSORY_CHECKLIST_ITEMS,
-        buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
-      )
-    : '';
-  const printChecklistSection = deviceChecklistBlock || accessoryChecklistBlock
-    ? `<div class="print-checklists">${deviceChecklistBlock}${accessoryChecklistBlock}</div>`
-    : '';
-
-  const signatures = `
-      <div class="signatures">
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${order.customerName || 'Cliente'}</div>
-        </div>
-        
-        <div class="signature-block">
-          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
-          <div class="signature-line"></div>
-          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
-        </div>
-      </div>`;
-
+function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures }) {
   const copyContent = (copyType) => `
       <div class="copy-container">
         <div class="copy-type">${copyType}</div>
@@ -804,7 +787,7 @@ function printOrder(order, title = 'Ordem de Serviço') {
         ${signatures}
       </div>`;
 
-  const html = `
+  return `
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
@@ -845,6 +828,12 @@ function printOrder(order, title = 'Ordem de Serviço') {
           margin-bottom: 8px;
           font-size: 14px;
         }
+        .shop img {
+          display: block;
+          max-width: 120px;
+          height: auto;
+          margin-bottom: 10px;
+        }
         .shop-name {
           font-weight: 800;
           font-size: 16px;
@@ -853,6 +842,7 @@ function printOrder(order, title = 'Ordem de Serviço') {
         .shop-line { color: #333; font-size: 12px; }
         .row { margin-bottom: 6px; font-size: 12px; }
         .label { display: inline-block; width: 100px; font-weight: 600; }
+        .label::after { content: ':'; }
         .value { color: #222; }
         .print-checklists {
           display: grid;
@@ -913,6 +903,9 @@ function printOrder(order, title = 'Ordem de Serviço') {
           letter-spacing: 0.3px;
         }
         @media (max-width: 700px) {
+          .print-page {
+            grid-template-columns: 1fr;
+          }
           .print-checklists {
             grid-template-columns: 1fr;
           }
@@ -927,6 +920,243 @@ function printOrder(order, title = 'Ordem de Serviço') {
     </body>
     </html>
   `;
+}
+
+function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures }) {
+  return `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @page { size: 80mm auto; margin: 4mm; }
+        body {
+          font-family: "Courier New", monospace;
+          color: #111;
+          background: #fff;
+        }
+        .cupom {
+          width: 72mm;
+          margin: 0 auto;
+          padding-bottom: 8mm;
+        }
+        .ticket-header {
+          text-align: center;
+          padding-bottom: 8px;
+          border-bottom: 1px dashed #444;
+          margin-bottom: 10px;
+        }
+        .ticket-header img {
+          display: block;
+          max-width: 44mm;
+          max-height: 22mm;
+          width: auto;
+          height: auto;
+          margin: 0 auto 6px;
+        }
+        .shop-name {
+          font-size: 14px;
+          font-weight: 700;
+          margin-bottom: 4px;
+        }
+        .shop-line {
+          font-size: 10px;
+          line-height: 1.35;
+          word-break: break-word;
+        }
+        .ticket-title {
+          text-align: center;
+          font-size: 13px;
+          font-weight: 700;
+          margin-bottom: 10px;
+          text-transform: uppercase;
+        }
+        .rows {
+          display: grid;
+          gap: 8px;
+        }
+        .row {
+          display: grid;
+          gap: 2px;
+          font-size: 11px;
+          padding-bottom: 6px;
+          border-bottom: 1px dashed #d0d0d0;
+        }
+        .label {
+          font-weight: 700;
+          text-transform: uppercase;
+          font-size: 10px;
+        }
+        .label::after { content: ':'; }
+        .value {
+          word-break: break-word;
+          line-height: 1.35;
+        }
+        .print-checklists {
+          display: grid;
+          gap: 10px;
+          margin-top: 10px;
+        }
+        .print-checklist {
+          border-top: 1px dashed #444;
+          padding-top: 8px;
+        }
+        .print-checklist strong {
+          display: block;
+          margin-bottom: 6px;
+          font-size: 11px;
+          text-transform: uppercase;
+        }
+        .print-checklist ul {
+          list-style: none;
+          display: grid;
+          gap: 4px;
+          padding: 0;
+        }
+        .print-checklist li {
+          display: flex;
+          gap: 6px;
+          align-items: flex-start;
+          font-size: 10px;
+          line-height: 1.3;
+        }
+        .checkmark { min-width: 14px; }
+        .signatures {
+          margin-top: 12px;
+          display: grid;
+          gap: 12px;
+          border-top: 1px dashed #444;
+          padding-top: 10px;
+        }
+        .signature-block p {
+          font-weight: 700;
+          font-size: 10px;
+          margin-bottom: 3px;
+          text-transform: uppercase;
+        }
+        .signature-line {
+          border-bottom: 1px solid #111;
+          height: 28px;
+          margin-bottom: 4px;
+        }
+        .signature-label {
+          font-size: 9px;
+          line-height: 1.3;
+          text-transform: uppercase;
+        }
+        .ticket-footer {
+          margin-top: 10px;
+          padding-top: 8px;
+          border-top: 1px dashed #444;
+          text-align: center;
+          font-size: 10px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="cupom">
+        <div class="ticket-header">
+          ${shopBlock}
+        </div>
+        <div class="ticket-title">${title}</div>
+        <div class="rows">
+          ${rows}
+        </div>
+        ${printChecklistSection}
+        ${signatures}
+        <div class="ticket-footer">Comprovante de OS</div>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+function buildPrintIframe(order, title = 'Ordem de Serviço', layout = 'a4') {
+  const settings = getSettingsSnapshot();
+  const logoSrc = settings.shopLogo || DEFAULT_LOGO;
+  const logoHtml = `<img src="${logoSrc}" alt="Logo">`;
+  const shopBlock = [
+    logoHtml,
+    settings.shopName && `<div class="shop-name">${settings.shopName}</div>`,
+    settings.shopAddress && `<div class="shop-line"><strong>Endereço:</strong> ${settings.shopAddress}</div>`,
+    settings.shopPhone && `<div class="shop-line"><strong>Telefone:</strong> ${formatPhoneDigits(settings.shopPhone)}</div>`,
+    settings.shopInstagram && `<div class="shop-line"><strong>Instagram:</strong> ${settings.shopInstagram}</div>`,
+    settings.shopFacebook && `<div class="shop-line"><strong>Facebook:</strong> ${settings.shopFacebook}</div>`,
+  ]
+    .filter(Boolean)
+    .join('');
+
+  const fields = [
+    { label: 'Cliente', value: order.customerName || '-' },
+    { label: 'Telefone', value: order.phone ? formatPhoneDigits(order.phone) : '-' },
+    { label: 'Documento', value: order.customerDocument || '-' },
+    { label: 'Aparelho', value: order.device || '-' },
+    { label: 'Defeito', value: order.issue || '-' },
+    { label: 'Valor', value: formatCurrency(order.price || 0) },
+    { label: 'Observações', value: order.notes || '-' },
+  ];
+
+  if (order.status) fields.push({ label: 'Status', value: order.status });
+  if (order.createdAt) fields.push({ label: 'Criada em', value: formatDate(order.createdAt) });
+  if (order.updatedAt) fields.push({ label: 'Atualizada em', value: formatDate(order.updatedAt) });
+
+  const rows = fields
+    .map(
+      (f) => `
+        <div class="row">
+          <span class="label">${f.label}</span>
+          <span class="value">${f.value}</span>
+        </div>`
+    )
+    .join('');
+
+  const deviceChecklistBlock = order.deviceChecklistEnabled
+    ? renderPrintChecklist(
+        'Checklist do Aparelho',
+        DEVICE_CHECKLIST_ITEMS,
+        buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist)
+      )
+    : '';
+  const accessoryChecklistBlock = order.accessoryChecklistEnabled
+    ? renderPrintChecklist(
+        'Periféricos Recebidos',
+        ACCESSORY_CHECKLIST_ITEMS,
+        buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
+      )
+    : '';
+  const printChecklistSection = deviceChecklistBlock || accessoryChecklistBlock
+    ? `<div class="print-checklists">${deviceChecklistBlock}${accessoryChecklistBlock}</div>`
+    : '';
+
+  const signatures = `
+      <div class="signatures">
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura do Cliente</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${order.customerName || 'Cliente'}</div>
+        </div>
+        
+        <div class="signature-block">
+          <p style="font-weight: 600; margin-bottom: 5px;">Assinatura da Loja</p>
+          <div class="signature-line"></div>
+          <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
+        </div>
+      </div>`;
+  return layout === 'cupom'
+    ? buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures })
+    : buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures });
+}
+
+async function handleOrderPrint(order, title = 'Ordem de Serviço') {
+  const layout = await choosePrintLayout();
+  if (!layout) return;
+  printOrder(order, title, layout);
+}
+
+function printOrder(order, title = 'Ordem de Serviço', layout = 'a4') {
+  const html = buildPrintIframe(order, title, layout);
 
   // Criar iframe para impressão (funciona em mobile)
   const iframe = document.createElement('iframe');
@@ -1236,7 +1466,7 @@ async function handleDetailAction(id, dataset) {
   if (dataset.action === 'print') {
     const order = loadOrders().find((o) => o.id === id);
     if (order) {
-      printOrder(order, 'Detalhes da OS');
+      await handleOrderPrint(order, 'Detalhes da OS');
     }
   }
   if (dataset.action === 'share-pdf') {
@@ -1335,6 +1565,7 @@ function updateStatus(id, newStatus) {
       ...o,
       status: newStatus,
       updatedAt: now,
+      finalizedAt: getFinalizedAtForStatusChange(o, newStatus, now),
       history: [...o.history, { date: now, action: `Status alterado para ${newStatus}` }],
     };
   });
@@ -1346,10 +1577,12 @@ function saveManual(id) {
     if (o.id !== id) return o;
     const now = new Date().toISOString();
     const statusChanged = detailPendingStatus && detailPendingStatus !== o.status;
+    const nextStatus = statusChanged ? detailPendingStatus : o.status;
     return {
       ...o,
-      status: statusChanged ? detailPendingStatus : o.status,
+      status: nextStatus,
       updatedAt: now,
+      finalizedAt: getFinalizedAtForStatusChange(o, nextStatus, now),
       history: [
         ...o.history,
         ...(statusChanged ? [{ date: now, action: `Status alterado para ${detailPendingStatus}` }] : []),
@@ -1395,6 +1628,10 @@ async function handleSubmit(event) {
             price: data.price,
             cost: data.cost,
             updatedAt: now,
+            finalizedAt:
+              o.status === 'Finalizado'
+                ? o.finalizedAt || o.updatedAt || o.createdAt || now
+                : '',
             history: [...o.history, { date: now, action: 'OS editada' }],
           }
         : o
@@ -1433,8 +1670,8 @@ function getFormOrderLike() {
   };
 }
 
-function handleFormPrint() {
-  printOrder(getFormOrderLike(), 'Nova OS');
+async function handleFormPrint() {
+  await handleOrderPrint(getFormOrderLike(), 'Nova OS');
 }
 
 async function handleFormSharePdf() {
@@ -1515,19 +1752,19 @@ function cancelSettingsEdit() {
 function updateFinance() {
   let orders = loadOrders().filter((o) => o.status === 'Finalizado');
 
-  // Sort by updatedAt descending
-  orders.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  // Sort by finalizedAt descending
+  orders.sort((a, b) => new Date(getFinanceReferenceDate(b)) - new Date(getFinanceReferenceDate(a)));
 
   const today = new Date();
   const totalDay = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d.toDateString() === today.toDateString();
     })
     .reduce((sum, o) => sum + (o.price || 0), 0);
   const costDay = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d.toDateString() === today.toDateString();
     })
     .reduce((sum, o) => sum + (o.cost || 0), 0);
@@ -1538,26 +1775,26 @@ function updateFinance() {
   startOfWeek.setHours(0, 0, 0, 0);
   const totalWeek = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d >= startOfWeek;
     })
     .reduce((sum, o) => sum + (o.price || 0), 0);
   const costWeek = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d >= startOfWeek;
     })
     .reduce((sum, o) => sum + (o.cost || 0), 0);
 
   const totalMonth = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
     })
     .reduce((sum, o) => sum + (o.price || 0), 0);
   const costMonth = orders
     .filter((o) => {
-      const d = new Date(o.updatedAt);
+      const d = new Date(getFinanceReferenceDate(o));
       return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
     })
     .reduce((sum, o) => sum + (o.cost || 0), 0);
@@ -1575,7 +1812,7 @@ function updateFinance() {
   // Group by date label
   const groups = {};
   orders.forEach((o) => {
-    const label = getDateLabel(o.updatedAt);
+    const label = getDateLabel(getFinanceReferenceDate(o));
     if (!groups[label]) groups[label] = [];
     groups[label].push(o);
   });
@@ -1599,7 +1836,7 @@ function updateFinance() {
             <span class="finance-badge cost">Custo: ${formatCurrency(o.cost || 0)}</span>
             <span class="finance-badge profit">Lucro: ${formatCurrency((o.price || 0) - (o.cost || 0))}</span>
           </div>
-          <div class="meta">Finalizado em ${formatDate(o.updatedAt)}</div>
+          <div class="meta">Finalizado em ${formatDate(getFinanceReferenceDate(o))}</div>
         </article>`
           )
           .join('')}
