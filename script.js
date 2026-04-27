@@ -34,6 +34,7 @@ const els = {
   filterButtons: document.querySelectorAll('.filter-btn'),
   ordersList: document.getElementById('ordersList'),
   navButtons: document.querySelectorAll('.nav-btn'),
+  openProfileHeader: document.getElementById('openProfileHeader'),
   form: document.getElementById('orderForm'),
   formTitle: document.getElementById('formTitle'),
   closeForm: document.getElementById('closeForm'),
@@ -1867,6 +1868,7 @@ function bindEvents() {
       renderOrders();
     })
   );
+  els.openProfileHeader?.addEventListener('click', () => openScreen('settingsView'));
   els.closeForm.addEventListener('click', () => openScreen('listView'));
   els.cancelForm.addEventListener('click', () => openScreen('listView'));
   els.form.addEventListener('submit', handleSubmit);

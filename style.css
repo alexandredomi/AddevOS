@@ -50,6 +50,10 @@ body {
   overflow: visible;
   flex-shrink: 0;
   isolation: isolate;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
 }
 .perfil-header img{
   width: 100%;
