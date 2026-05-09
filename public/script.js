@@ -2,6 +2,37 @@
 const SETTINGS_KEY = 'settings';
 const DEFAULT_LOGO = 'assets/img/logo.png';
 const DEFAULT_PROFILE_PHOTO = 'assets/img/perfil-sem-foto.jpg';
+const APP_CACHE_PREFIX = 'addevos-cache';
+const FIREBASE_CONFIG = window.addevFirebaseConfig || {};
+const PLAN_CONFIG = window.addevPlanConfig || {
+  monthlyPrice: 39.9,
+  monthlyPriceLabel: '39,90',
+  planName: 'Mensal',
+};
+const DEFAULT_SETTINGS = {
+  shopName: '',
+  shopAddress: '',
+  shopPhone: '',
+  shopInstagram: '',
+  shopFacebook: '',
+  shopLogo: '',
+  subscriptionStatus: 'active',
+  planName: PLAN_CONFIG.planName,
+  monthlyPrice: PLAN_CONFIG.monthlyPrice,
+};
+const FIREBASE_PLACEHOLDER_PREFIX = 'COLE_AQUI_';
+
+const appState = {
+  authUser: null,
+  assistanceId: '',
+  initialized: false,
+  orders: [],
+  settings: { ...DEFAULT_SETTINGS },
+};
+
+let firebaseReady = false;
+let auth = null;
+let db = null;
 
 const DEVICE_CHECKLIST_ITEMS = [
   { key: 'doesNotPowerOn', label: 'Aparelho não liga' },
@@ -35,6 +66,14 @@ const els = {
   ordersList: document.getElementById('ordersList'),
   navButtons: document.querySelectorAll('.nav-btn'),
   openProfileHeader: document.getElementById('openProfileHeader'),
+  loadingScreen: document.getElementById('loadingScreen'),
+  loginScreen: document.getElementById('loginScreen'),
+  app: document.getElementById('app'),
+  loginForm: document.getElementById('loginForm'),
+  loginEmail: document.getElementById('loginEmail'),
+  loginPassword: document.getElementById('loginPassword'),
+  loginFeedback: document.getElementById('loginFeedback'),
+  logoutBtn: document.getElementById('logoutBtn'),
   form: document.getElementById('orderForm'),
   formTitle: document.getElementById('formTitle'),
   closeForm: document.getElementById('closeForm'),
@@ -83,6 +122,379 @@ const formFields = {
   cost: document.getElementById('cost'),
   notes: document.getElementById('notes'),
 };
+
+function hasFirebaseConfig() {
+  return Object.values(FIREBASE_CONFIG).every(
+    (value) =>
+      typeof value === 'string' &&
+      value.trim() &&
+      !value.startsWith(FIREBASE_PLACEHOLDER_PREFIX)
+  );
+}
+
+function initializeFirebaseServices() {
+  if (!hasFirebaseConfig()) return false;
+  if (firebase.apps.length) {
+    firebaseReady = true;
+    auth = firebase.auth();
+    db = firebase.firestore();
+    db.enablePersistence({ synchronizeTabs: false }).catch(() => {});
+    return true;
+  }
+
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  db.enablePersistence({ synchronizeTabs: false }).catch(() => {});
+  firebaseReady = true;
+  return true;
+}
+
+function getCacheKey(type, assistanceId = appState.assistanceId || 'guest') {
+  return `${APP_CACHE_PREFIX}:${type}:${assistanceId}`;
+}
+
+function normalizeSettings(settings = {}) {
+  return {
+    ...DEFAULT_SETTINGS,
+    ...(settings || {}),
+    shopName: settings.shopName || '',
+    shopAddress: settings.shopAddress || '',
+    shopPhone: settings.shopPhone || '',
+    shopInstagram: settings.shopInstagram || '',
+    shopFacebook: settings.shopFacebook || '',
+    shopLogo: settings.shopLogo || '',
+    subscriptionStatus: settings.subscriptionStatus || 'active',
+    planName: settings.planName || PLAN_CONFIG.planName,
+    monthlyPrice:
+      typeof settings.monthlyPrice === 'number' ? settings.monthlyPrice : PLAN_CONFIG.monthlyPrice,
+  };
+}
+
+function normalizeOrder(order = {}) {
+  return {
+    ...order,
+    price: Number(order.price) || 0,
+    cost: Number(order.cost) || 0,
+    deviceChecklistEnabled: Boolean(order.deviceChecklistEnabled),
+    accessoryChecklistEnabled: Boolean(order.accessoryChecklistEnabled),
+    deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, order.deviceChecklist),
+    accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist),
+    finalizedAt:
+      order.finalizedAt || (order.status === 'Finalizado' ? order.updatedAt || order.createdAt || '' : ''),
+  };
+}
+
+function setOrdersState(orders = []) {
+  appState.orders = orders.map((order) => normalizeOrder(order));
+}
+
+function setSettingsState(settings = {}) {
+  appState.settings = normalizeSettings(settings);
+}
+
+function writeCache(type, value) {
+  if (!appState.assistanceId) return;
+  localStorage.setItem(getCacheKey(type), JSON.stringify(value));
+}
+
+function readCache(type, fallback) {
+  if (!appState.assistanceId) return fallback;
+  const saved = localStorage.getItem(getCacheKey(type));
+  if (!saved) return fallback;
+
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return fallback;
+  }
+}
+
+function persistLocalState() {
+  if (!appState.assistanceId) return;
+  writeCache('orders', appState.orders);
+  writeCache('settings', appState.settings);
+}
+
+function setAppMode(mode) {
+  els.loadingScreen.hidden = mode !== 'loading';
+  els.loginScreen.hidden = mode !== 'login';
+  els.app.hidden = mode !== 'app';
+}
+
+function setLoginFeedback(message = '', isError = true) {
+  if (!els.loginFeedback) return;
+  if (!message) {
+    els.loginFeedback.hidden = true;
+    els.loginFeedback.textContent = '';
+    els.loginFeedback.style.background = '';
+    els.loginFeedback.style.color = '';
+    return;
+  }
+
+  els.loginFeedback.hidden = false;
+  els.loginFeedback.textContent = message;
+  els.loginFeedback.style.background = isError
+    ? 'rgba(197, 48, 48, 0.08)'
+    : 'rgba(31, 155, 86, 0.12)';
+  els.loginFeedback.style.color = isError ? '#b83232' : '#086e36';
+}
+
+function getAssistanceDocRef(uid = appState.assistanceId) {
+  return db.collection('assistances').doc(uid);
+}
+
+function getOrdersCollectionRef(uid = appState.assistanceId) {
+  return getAssistanceDocRef(uid).collection('orders');
+}
+
+async function saveOrderRemote(order) {
+  if (!firebaseReady || !appState.assistanceId) return;
+  await getOrdersCollectionRef().doc(order.id).set(normalizeOrder(order), { merge: true });
+}
+
+async function deleteOrderRemote(orderId) {
+  if (!firebaseReady || !appState.assistanceId) return;
+  await getOrdersCollectionRef().doc(orderId).delete();
+}
+
+async function saveSettingsRemote(settings) {
+  if (!firebaseReady || !appState.assistanceId) return;
+  const mergedSettings = normalizeSettings({
+    ...appState.settings,
+    ...settings,
+  });
+  const payload = {
+    ...mergedSettings,
+    ownerEmail: appState.authUser?.email || '',
+    updatedAt: new Date().toISOString(),
+  };
+  await getAssistanceDocRef().set(payload, { merge: true });
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Falha ao ler imagem.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function getLegacyLocalSettings() {
+  const saved = localStorage.getItem(SETTINGS_KEY);
+  if (!saved) return { ...DEFAULT_SETTINGS };
+  try {
+    return normalizeSettings(JSON.parse(saved));
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+async function maybeMigrateLegacyLocalData(remoteOrders, remoteSettings) {
+  const legacySettings = getLegacyLocalSettings();
+  const shouldMigrateSettings =
+    !remoteSettings.shopName &&
+    !remoteSettings.shopAddress &&
+    !remoteSettings.shopPhone &&
+    !remoteSettings.shopInstagram &&
+    !remoteSettings.shopFacebook &&
+    !remoteSettings.shopLogo &&
+    (legacySettings.shopName ||
+      legacySettings.shopAddress ||
+      legacySettings.shopPhone ||
+      legacySettings.shopInstagram ||
+      legacySettings.shopFacebook ||
+      legacySettings.shopLogo);
+
+  if (!shouldMigrateSettings) return;
+
+  if (shouldMigrateSettings) {
+    await saveSettingsRemote(legacySettings);
+    setSettingsState({ ...remoteSettings, ...legacySettings });
+  }
+
+  persistLocalState();
+}
+
+async function ensureAssistanceDocument(settingsDoc) {
+  if (settingsDoc.exists) {
+    return normalizeSettings(settingsDoc.data());
+  }
+
+  const bootstrapSettings = normalizeSettings({
+    ownerEmail: appState.authUser?.email || '',
+    updatedAt: new Date().toISOString(),
+  });
+
+  await getAssistanceDocRef().set(
+    {
+      ...bootstrapSettings,
+      ownerEmail: appState.authUser?.email || '',
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
+
+  return bootstrapSettings;
+}
+
+async function loadRemoteAppData() {
+  const settingsDoc = await getAssistanceDocRef().get();
+  const remoteSettings = await ensureAssistanceDocument(settingsDoc);
+  const ordersSnapshot = await getOrdersCollectionRef().get();
+  const remoteOrders = ordersSnapshot.docs.map((snapshot) => normalizeOrder(snapshot.data()));
+
+  setSettingsState(remoteSettings);
+  setOrdersState(remoteOrders);
+  await maybeMigrateLegacyLocalData(remoteOrders, remoteSettings);
+  persistLocalState();
+}
+
+function renderAppShell() {
+  renderSettings();
+  renderOrders();
+  updateFinance();
+  openScreen('listView');
+}
+
+function withTimeout(promise, timeoutMs = 12000) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('A sincronização com o Firebase demorou mais que o esperado.')), timeoutMs);
+    }),
+  ]);
+}
+
+function hydrateStateFromCache(uid) {
+  appState.assistanceId = uid;
+  setSettingsState(readCache('settings', DEFAULT_SETTINGS));
+  setOrdersState(readCache('orders', []));
+}
+
+function shouldBlockSubscription(settings) {
+  return settings.subscriptionStatus && settings.subscriptionStatus !== 'active';
+}
+
+async function handleAuthenticatedUser(user) {
+  appState.authUser = user;
+  appState.assistanceId = user.uid;
+  hydrateStateFromCache(user.uid);
+  setAppMode('app');
+  renderAppShell();
+
+  await withTimeout(loadRemoteAppData());
+
+  if (shouldBlockSubscription(appState.settings)) {
+    await auth.signOut();
+    throw new Error(
+      `Assinatura ${appState.settings.subscriptionStatus}. Libere a assistência no Firebase para acessar o sistema.`
+    );
+  }
+
+  renderAppShell();
+  setAppMode('app');
+}
+
+async function handleLoginSubmit(event) {
+  event.preventDefault();
+  if (!firebaseReady || !auth) {
+    setLoginFeedback('Configure o arquivo firebase-config.js antes de usar o login.');
+    return;
+  }
+
+  const email = els.loginEmail.value.trim();
+  const password = els.loginPassword.value;
+  if (!email || !password) {
+    setLoginFeedback('Informe e-mail e senha para entrar.');
+    return;
+  }
+
+  setLoginFeedback('');
+  setAppMode('loading');
+
+  try {
+    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    setAppMode('login');
+    setLoginFeedback(getFriendlyAuthError(error));
+  }
+}
+
+function getFriendlyAuthError(error) {
+  const code = error?.code || '';
+  if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+    return 'E-mail ou senha inválidos.';
+  }
+  if (code === 'auth/user-disabled') {
+    return 'Esta conta está desativada.';
+  }
+  if (code === 'auth/too-many-requests') {
+    return 'Muitas tentativas. Aguarde um pouco e tente novamente.';
+  }
+  if (code === 'auth/network-request-failed') {
+    return 'Falha de rede ao tentar entrar.';
+  }
+
+  return error?.message || 'Não foi possível entrar agora.';
+}
+
+async function bootstrapAuth() {
+  if (!initializeFirebaseServices()) {
+    setAppMode('login');
+    setLoginFeedback(
+      'Preencha o arquivo firebase-config.js com os dados do seu projeto Firebase para ativar o login.'
+    );
+    return;
+  }
+
+  setAppMode('loading');
+
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      appState.authUser = null;
+      appState.assistanceId = '';
+      setOrdersState([]);
+      setSettingsState(DEFAULT_SETTINGS);
+      setAppMode('login');
+      return;
+    }
+
+    try {
+      await handleAuthenticatedUser(user);
+      setLoginFeedback('');
+    } catch (error) {
+      const hasLocalData =
+        appState.orders.length > 0 ||
+        Boolean(
+          appState.settings.shopName ||
+            appState.settings.shopAddress ||
+            appState.settings.shopPhone ||
+            appState.settings.shopInstagram ||
+            appState.settings.shopFacebook ||
+            appState.settings.shopLogo
+        );
+
+      if (hasLocalData && user) {
+        setAppMode('app');
+        renderAppShell();
+        await alertModal(error?.message || 'Não foi possível sincronizar com o Firebase agora.');
+        return;
+      }
+
+      setAppMode('login');
+      setLoginFeedback(error?.message || 'Não foi possível carregar os dados da assistência.');
+    }
+  });
+}
+
+async function handleLogout() {
+  if (!auth) return;
+  setAppMode('loading');
+  await auth.signOut();
+}
 
 function isChecklistEnabled(group) {
   return document.querySelector(`input[name="${group}ChecklistEnabled"]:checked`)?.value === 'true';
@@ -224,77 +636,24 @@ let detailCurrentId = null;
 let detailHistoryExpanded = false;
 
 function loadOrders() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved)
-    return JSON.parse(saved).map((o) => ({
-      ...o,
-      price: Number(o.price) || 0,
-      cost: Number(o.cost) || 0,
-      deviceChecklistEnabled: Boolean(o.deviceChecklistEnabled),
-      accessoryChecklistEnabled: Boolean(o.accessoryChecklistEnabled),
-      deviceChecklist: buildChecklistState(DEVICE_CHECKLIST_ITEMS, o.deviceChecklist),
-      accessoryChecklist: buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, o.accessoryChecklist),
-      finalizedAt:
-        o.finalizedAt || (o.status === 'Finalizado' ? o.updatedAt || o.createdAt || '' : ''),
-    }));
-
-  const seed = [
-    createOrderObject({
-      customerName: 'João Silva',
-      phone: '11999999999',
-      device: 'iPhone 13',
-      issue: 'Tela trincada',
-      price: 1200,
-      cost: 650,
-      notes: 'Cliente solicita troca rápida',
-      status: 'Aguardando',
-    }),
-    createOrderObject({
-      customerName: 'Maria Costa',
-      phone: '11988887777',
-      device: 'Notebook Dell',
-      issue: 'Sem vídeo',
-      price: 850,
-      cost: 300,
-      notes: 'Verificar placa de vídeo',
-      status: 'Em andamento',
-    }),
-    createOrderObject({
-      customerName: 'Pedro Santos',
-      phone: '11911114444',
-      device: 'Samsung S22',
-      issue: 'Bateria descarregando rápido',
-      price: 680,
-      cost: 220,
-      notes: 'Troca de bateria',
-      status: 'Finalizado',
-    }),
-  ];
-  saveOrders(seed);
-  return seed;
+  return appState.orders.map((order) => normalizeOrder(order));
 }
 
 function saveOrders(orders) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+  setOrdersState(orders);
+  persistLocalState();
 }
 
 function loadSettings() {
-  const saved = localStorage.getItem(SETTINGS_KEY);
-  if (saved) return JSON.parse(saved);
-  const defaults = {
-    shopName: '',
-    shopAddress: '',
-    shopPhone: '',
-    shopInstagram: '',
-    shopFacebook: '',
-    shopLogo: '',
-  };
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaults));
-  return defaults;
+  return normalizeSettings(appState.settings);
 }
 
 function saveSettings(settings) {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  setSettingsState({
+    ...appState.settings,
+    ...settings,
+  });
+  persistLocalState();
 }
 
 function createOrderObject({
@@ -1446,7 +1805,12 @@ async function handleDetailAction(id, dataset) {
   }
   if (dataset.action === 'status') {
     setPendingStatus(dataset.status);
-    saveManual(id);
+    try {
+      await saveManual(id);
+    } catch (error) {
+      await alertModal('Falhou ao sincronizar a alteração de status com o Firebase.');
+      return;
+    }
     renderOrders();
     updateFinance();
     openDetail(id); // Refresh the detail view
@@ -1459,6 +1823,12 @@ async function handleDetailAction(id, dataset) {
     if (await confirmModal('Deseja remover esta OS?')) {
       const filtered = loadOrders().filter((o) => o.id !== id);
       saveOrders(filtered);
+      try {
+        await deleteOrderRemote(id);
+      } catch (error) {
+        await alertModal('A OS foi removida do cache local, mas falhou a exclusão no Firebase.');
+        return;
+      }
       renderOrders();
       openScreen('listView');
       updateFinance();
@@ -1558,7 +1928,7 @@ function handlePhoneCall(phone) {
   }
 }
 
-function updateStatus(id, newStatus) {
+async function updateStatus(id, newStatus) {
   const orders = loadOrders().map((o) => {
     if (o.id !== id) return o;
     const now = new Date().toISOString();
@@ -1571,9 +1941,11 @@ function updateStatus(id, newStatus) {
     };
   });
   saveOrders(orders);
+  const updatedOrder = orders.find((order) => order.id === id);
+  if (updatedOrder) await saveOrderRemote(updatedOrder);
 }
 
-function saveManual(id) {
+async function saveManual(id) {
   const orders = loadOrders().map((o) => {
     if (o.id !== id) return o;
     const now = new Date().toISOString();
@@ -1592,6 +1964,8 @@ function saveManual(id) {
     };
   });
   saveOrders(orders);
+  const updatedOrder = orders.find((order) => order.id === id);
+  if (updatedOrder) await saveOrderRemote(updatedOrder);
 }
 
 async function handleSubmit(event) {
@@ -1619,28 +1993,37 @@ async function handleSubmit(event) {
   }
 
   const orders = loadOrders();
-  if (editingId) {
-    const now = new Date().toISOString();
-    const updated = orders.map((o) =>
-      o.id === editingId
-        ? {
-            ...o,
-            ...data,
-            price: data.price,
-            cost: data.cost,
-            updatedAt: now,
-            finalizedAt:
-              o.status === 'Finalizado'
-                ? o.finalizedAt || o.updatedAt || o.createdAt || now
-                : '',
-            history: [...o.history, { date: now, action: 'OS editada' }],
-          }
-        : o
-    );
-    saveOrders(updated);
-  } else {
-    orders.unshift(createOrderObject({ ...data, status: 'Aguardando' }));
-    saveOrders(orders);
+  try {
+    if (editingId) {
+      const now = new Date().toISOString();
+      const updated = orders.map((o) =>
+        o.id === editingId
+          ? {
+              ...o,
+              ...data,
+              price: data.price,
+              cost: data.cost,
+              updatedAt: now,
+              finalizedAt:
+                o.status === 'Finalizado'
+                  ? o.finalizedAt || o.updatedAt || o.createdAt || now
+                  : '',
+              history: [...o.history, { date: now, action: 'OS editada' }],
+            }
+          : o
+      );
+      saveOrders(updated);
+      const updatedOrder = updated.find((order) => order.id === editingId);
+      if (updatedOrder) await saveOrderRemote(updatedOrder);
+    } else {
+      const newOrder = createOrderObject({ ...data, status: 'Aguardando' });
+      orders.unshift(newOrder);
+      saveOrders(orders);
+      await saveOrderRemote(newOrder);
+    }
+  } catch (error) {
+    await alertModal('A OS foi atualizada no cache local, mas falhou ao sincronizar com o Firebase.');
+    return;
   }
 
   clearForm();
@@ -1677,15 +2060,6 @@ async function handleFormPrint() {
 
 async function handleFormSharePdf() {
   await sendOrderPdfViaWhatsApp(getFormOrderLike(), 'Nova OS');
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error('Falha ao ler imagem.'));
-    reader.readAsDataURL(file);
-  });
 }
 
 function renderSettings() {
@@ -1726,11 +2100,16 @@ async function handleSettingsSave(event) {
   let shopLogo = current.shopLogo || '';
   const logoFile = els.settingsFields.shopLogoFile.files?.[0];
   if (logoFile) {
-    if (logoFile.size > 1024 * 1024) {
-      await alertModal('A imagem da logo deve ter no maximo 1MB.');
+    if (logoFile.size > 250 * 1024) {
+      await alertModal('A imagem da logo deve ter no maximo 250KB para funcionar sem Firebase Storage.');
       return;
     }
-    shopLogo = await readFileAsDataUrl(logoFile);
+    try {
+      shopLogo = await readFileAsDataUrl(logoFile);
+    } catch (error) {
+      await alertModal('Falhou ao ler a logo selecionada.');
+      return;
+    }
   }
 
   const data = {
@@ -1742,6 +2121,12 @@ async function handleSettingsSave(event) {
     shopLogo,
   };
   saveSettings(data);
+  try {
+    await saveSettingsRemote(data);
+  } catch (error) {
+    await alertModal('As configurações foram salvas no cache local, mas falhou a sincronização com o Firebase.');
+    return;
+  }
   renderSettings();
   await alertModal('Configurações salvas.');
 }
@@ -1860,6 +2245,15 @@ function initNavigation() {
 }
 
 function bindEvents() {
+  els.loginForm?.addEventListener('submit', handleLoginSubmit);
+  els.logoutBtn?.addEventListener('click', async () => {
+    try {
+      await handleLogout();
+    } catch (error) {
+      setAppMode('app');
+      await alertModal('Não foi possível sair agora.');
+    }
+  });
   els.search.addEventListener('input', renderOrders);
   els.filterButtons.forEach((btn) =>
     btn.addEventListener('click', () => {
@@ -1909,19 +2303,19 @@ function bindEvents() {
   });
 }
 
-function start() {
-  loadOrders();
-  loadSettings();
+async function start() {
   bindEvents();
   initNavigation();
-  renderSettings();
   updateDeviceChecklistVisibility({ clearHidden: true });
   updateAccessoryChecklistVisibility({ clearHidden: true });
-  renderOrders();
-  updateFinance();
+  await bootstrapAuth();
 }
 
-start();
+start().catch((error) => {
+  setAppMode('login');
+  setLoginFeedback('Falha ao iniciar o sistema.');
+  console.error(error);
+});
 function setPendingStatus(status) {
   detailPendingStatus = status;
   document.querySelectorAll('.status-row button').forEach((btn) => {

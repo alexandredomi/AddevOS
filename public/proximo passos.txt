@@ -1,0 +1,33 @@
+O que eu considero pronto
+
+login com Firebase Auth
+dados separados por assistência
+Firestore integrado
+bloqueio por subscriptionStatus
+app funcional sem depender de Storage
+O que eu recomendo antes de produção real
+
+Trocar logo em base64 por Storage
+
+do jeito atual funciona para teste
+para produção, imagem no Firestore não é o ideal
+Criar backup/export dos dados
+
+pelo menos uma rotina manual no começo
+Melhorar o bloqueio de mensalidade
+
+hoje ele está no app
+para produção mais forte, o ideal depois é backend/admin/custom claims
+Revisar UX de erros
+
+internet caiu
+permissão negada
+sincronização parcial
+Resumo direto
+Hoje, para “ir pro ar”, falta principalmente:
+
+publicar regras
+validar com contas reais
+instalar Node/Firebase CLI
+configurar Firebase Hosting
+fazer o deploy

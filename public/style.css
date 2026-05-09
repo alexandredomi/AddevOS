@@ -9,6 +9,10 @@
   --shadow: 0 12px 32px rgba(12, 11, 68, 0.12);
 }
 
+[hidden] {
+  display: none !important;
+}
+
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -16,6 +20,16 @@ body {
   background: radial-gradient(120% 120% at 12% 18%, rgba(89,103,255,0.08), transparent 45%), var(--bg);
   color: var(--text);
   min-height: 100vh;
+}
+
+.login-feedback {
+  margin: 14px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(197, 48, 48, 0.08);
+  color: #b83232;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 #app {

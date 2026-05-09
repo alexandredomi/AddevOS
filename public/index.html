@@ -10,26 +10,36 @@
   </head>
   <body>
     <!-- Tela de loading -->
-    <div class="loading" style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; display: none;">
+    <div
+      id="loadingScreen"
+      class="loading"
+      hidden
+      style="display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%;"
+    >
       <div class="loader"></div>
     </div>
     <!-- Tela de login -->
-    <div style="display: flex; align-items: center; justify-content: center; padding: 100px 0px; display: none;">
+    <div
+      id="loginScreen"
+      hidden
+      style="display: flex; align-items: center; justify-content: center; height: 100vh; width: 100%;"
+    >
       <div class="login" style="display: flex; justify-content: center; align-items: center;">
         <div class="center" style="width: 100%; max-width: 400px; padding: 0px auto;">
           <div class="img-login" style="display: flex; justify-content: center; align-items: center;">
               <img src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="" style="width: 50%;">
           </div>
           <h2>Login</h2>
-          <form action="">
+          <form id="loginForm" action="">
               <label for="usuario">
                   <p>E-mail</p>
-                  <input type="text">
+                  <input id="loginEmail" type="email" autocomplete="email" required>
               </label>
               <label for="senha">
                   <p>Senha</p>
-                  <input type="password">
+                  <input id="loginPassword" type="password" autocomplete="current-password" required>
               </label>
+          <p id="loginFeedback" class="login-feedback" hidden></p>
           <input type="submit" value="Entrar" style="
                   background: linear-gradient(135deg, var(--primary) 0%, #6f7bff 100%);
                   color: #fff;
@@ -64,11 +74,10 @@
     </div>
 
     <!-- App -->
-    <div id="app" class="home-header-active">
+    <div id="app" class="home-header-active" hidden>
       <header class="topbar">
         <div class="brand">
           <img class="logo" src="assets/img/logo addev flow fundo transparente sem slogam.png" alt="Logo ADDEV FLOW ">
-          <!-- <h2 class="logo">ADDEV<span class="logo-span">FLOW</span></h2> -->
         </div>
         <div class="brand">
           <button
@@ -78,7 +87,6 @@
             aria-label="Abrir perfil"
           >
             <div class="icone-online-perfil-header"></div>
-            <!-- <img src="assets/img/perfil-sem-foto.jpg" alt="foto perfil logado"> -->
             <img id="headerProfileAvatar" src="assets/img/perfil-sem-foto.jpg" alt="Foto do perfil logado">
           </button>
           <div class="logout">
@@ -605,6 +613,10 @@
       </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
