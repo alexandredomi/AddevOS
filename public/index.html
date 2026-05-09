@@ -499,6 +499,25 @@
               </div>
             </div>
           </div>
+          <div class="profile-card terms-profile-card">
+            <div class="terms-profile-header">
+              <div>
+                <h3>Termos e Condições</h3>
+                <p>Texto usado no rodapé da Ordem de Serviço</p>
+              </div>
+            </div>
+            <p id="profileOrderTerms" class="terms-profile-text">-</p>
+          </div>
+          <div class="profile-card accent-profile-card">
+            <div class="terms-profile-header">
+              <div>
+                <h3>Cor da Ordem de Serviço</h3>
+                <p>Usada nas partes coloridas do PDF e da impressão</p>
+              </div>
+              <span id="profileAccentSwatch" class="accent-swatch" aria-hidden="true"></span>
+            </div>
+            <span id="profileAccentLabel" class="accent-profile-label">Azul</span>
+          </div>
           <form
             id="settingsForm"
             class="settings-form hidden"
@@ -562,6 +581,34 @@
                 <label
                   >Logo da loja
                   <input type="file" id="shopLogoFile" accept="image/*" />
+                </label>
+                <label class="form-grid-full settings-section-card"
+                  ><span class="settings-section-heading">
+                    <strong>Cor da Ordem de Serviço</strong>
+                    <small>Escolha uma cor principal para as partes coloridas do PDF e impressão.</small>
+                  </span>
+                  Cor principal
+                  <select id="orderAccentColor">
+                    <option value="blue">Azul</option>
+                    <option value="red">Vermelho</option>
+                    <option value="green">Verde</option>
+                    <option value="yellow">Amarelo</option>
+                    <option value="purple">Roxo</option>
+                    <option value="pink">Rosa</option>
+                    <option value="gray">Cinza</option>
+                  </select>
+                </label>
+                <label class="form-grid-full settings-section-card"
+                  ><span class="settings-section-heading">
+                    <strong>Termos e Condições</strong>
+                    <small>Edite o texto que aparecerá no rodapé das Ordens de Serviço em PDF e impressão.</small>
+                  </span>
+                  Termos e condições da OS
+                  <textarea
+                    id="orderTerms"
+                    rows="7"
+                    placeholder="Digite os termos que aparecerão no rodapé da Ordem de Serviço"
+                  ></textarea>
                 </label>
               </div>
               <div class="form-actions">

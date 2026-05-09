@@ -142,7 +142,7 @@ main { display: grid; gap: 14px; }
   gap: 8px;
 }
 
-.search input, input, textarea {
+.search input, input, textarea, select {
   width: 100%;
   padding: 12px 16px;
   border-radius: 12px;
@@ -153,7 +153,7 @@ main { display: grid; gap: 14px; }
   transition: border-color 0.2s ease;
 }
 
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(89,103,255,0.1);
@@ -338,6 +338,67 @@ input:focus, textarea:focus {
 
 .detail-item span:last-child {
   color: var(--muted);
+}
+
+.terms-profile-card {
+  display: grid;
+  gap: 12px;
+}
+
+.terms-profile-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.terms-profile-header h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.terms-profile-header p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.terms-profile-text {
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.76);
+  border: 1px solid rgba(12,11,68,0.06);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.accent-profile-card {
+  gap: 12px;
+}
+
+.accent-swatch {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #2563eb;
+  border: 1px solid rgba(12,11,68,0.12);
+  box-shadow: 0 8px 18px rgba(12,11,68,0.12);
+  flex-shrink: 0;
+}
+
+.accent-profile-label {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(12,11,68,0.05);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .settings-form {
@@ -906,7 +967,31 @@ input:focus, textarea:focus {
   box-shadow: 0 8px 20px rgba(89, 103, 255, 0.12);
 }
 
+.settings-form .form-grid .settings-section-card {
+  margin-top: 8px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8f9ff 100%);
+  border-color: rgba(37, 99, 235, 0.18);
+}
+
+.settings-section-heading {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.settings-section-heading strong {
+  color: var(--primary-strong);
+  font-size: 16px;
+}
+
+.settings-section-heading small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .settings-form .form-grid input,
+.settings-form .form-grid select,
 .settings-form .form-grid textarea {
   font-size: 16px;
   padding: 12px;

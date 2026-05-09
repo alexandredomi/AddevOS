@@ -1,6 +1,6 @@
 ﻿const STORAGE_KEY = 'orders';
 const SETTINGS_KEY = 'settings';
-const DEFAULT_LOGO = 'assets/img/logo.png';
+const DEFAULT_LOGO = 'assets/img/logo addev flow fundo branco sem slogam.jpg';
 const DEFAULT_PROFILE_PHOTO = 'assets/img/perfil-sem-foto.jpg';
 const APP_CACHE_PREFIX = 'addevos-cache';
 const FIREBASE_CONFIG = window.addevFirebaseConfig || {};
@@ -9,6 +9,15 @@ const PLAN_CONFIG = window.addevPlanConfig || {
   monthlyPriceLabel: '39,90',
   planName: 'Mensal',
 };
+const ORDER_ACCENT_COLORS = {
+  blue: { label: 'Azul', value: '#2563eb', light: '#bfdbfe' },
+  red: { label: 'Vermelho', value: '#dc2626', light: '#fecaca' },
+  green: { label: 'Verde', value: '#16a34a', light: '#bbf7d0' },
+  yellow: { label: 'Amarelo', value: '#ca8a04', light: '#fde68a' },
+  purple: { label: 'Roxo', value: '#7c3aed', light: '#ddd6fe' },
+  pink: { label: 'Rosa', value: '#db2777', light: '#fbcfe8' },
+  gray: { label: 'Cinza', value: '#4b5563', light: '#d1d5db' },
+};
 const DEFAULT_SETTINGS = {
   shopName: '',
   shopAddress: '',
@@ -16,6 +25,8 @@ const DEFAULT_SETTINGS = {
   shopInstagram: '',
   shopFacebook: '',
   shopLogo: '',
+  orderTerms: '',
+  orderAccentColor: 'blue',
   subscriptionStatus: 'active',
   planName: PLAN_CONFIG.planName,
   monthlyPrice: PLAN_CONFIG.monthlyPrice,
@@ -52,6 +63,12 @@ const ACCESSORY_CHECKLIST_ITEMS = [
   { key: 'caboUsb', label: 'Cabo USB' },
   { key: 'cartaoMemoria', label: 'Cartão de memória' },
 ];
+const ORDER_TERMS_TEXT =
+  'Garantia de ___ dias para defeitos relacionados exclusivamente ao servico executado. ' +
+  'A loja nao se responsabiliza por perda de dados, chips, cartoes SD ou acessorios nao descritos nesta OS. ' +
+  'O equipamento devera ser retirado no prazo maximo de ___ dias apos aviso de conclusao ou orcamento. ' +
+  'Apos esse prazo, podera haver cobranca de armazenamento. ' +
+  'A nao retirada podera caracterizar abandono do equipamento, sujeito as medidas cabiveis conforme a legislacao aplicavel.';
 
 const els = {
   screens: {
@@ -87,6 +104,9 @@ const els = {
     phone: document.getElementById('profilePhone'),
     instagram: document.getElementById('profileInstagram'),
     facebook: document.getElementById('profileFacebook'),
+    orderTerms: document.getElementById('profileOrderTerms'),
+    accentLabel: document.getElementById('profileAccentLabel'),
+    accentSwatch: document.getElementById('profileAccentSwatch'),
   },
   settingsFields: {
     shopName: document.getElementById('shopName'),
@@ -95,6 +115,8 @@ const els = {
     shopInstagram: document.getElementById('shopInstagram'),
     shopFacebook: document.getElementById('shopFacebook'),
     shopLogoFile: document.getElementById('shopLogoFile'),
+    orderTerms: document.getElementById('orderTerms'),
+    orderAccentColor: document.getElementById('orderAccentColor'),
   },
   modal: {
     overlay: document.getElementById('modalOverlay'),
@@ -155,6 +177,7 @@ function getCacheKey(type, assistanceId = appState.assistanceId || 'guest') {
 }
 
 function normalizeSettings(settings = {}) {
+  const accentKey = ORDER_ACCENT_COLORS[settings.orderAccentColor] ? settings.orderAccentColor : DEFAULT_SETTINGS.orderAccentColor;
   return {
     ...DEFAULT_SETTINGS,
     ...(settings || {}),
@@ -164,6 +187,8 @@ function normalizeSettings(settings = {}) {
     shopInstagram: settings.shopInstagram || '',
     shopFacebook: settings.shopFacebook || '',
     shopLogo: settings.shopLogo || '',
+    orderTerms: settings.orderTerms || '',
+    orderAccentColor: accentKey,
     subscriptionStatus: settings.subscriptionStatus || 'active',
     planName: settings.planName || PLAN_CONFIG.planName,
     monthlyPrice:
@@ -300,12 +325,16 @@ async function maybeMigrateLegacyLocalData(remoteOrders, remoteSettings) {
     !remoteSettings.shopInstagram &&
     !remoteSettings.shopFacebook &&
     !remoteSettings.shopLogo &&
+    !remoteSettings.orderTerms &&
+    !remoteSettings.orderAccentColor &&
     (legacySettings.shopName ||
       legacySettings.shopAddress ||
       legacySettings.shopPhone ||
       legacySettings.shopInstagram ||
       legacySettings.shopFacebook ||
-      legacySettings.shopLogo);
+      legacySettings.shopLogo ||
+      legacySettings.orderTerms ||
+      legacySettings.orderAccentColor);
 
   if (!shouldMigrateSettings) return;
 
@@ -758,7 +787,20 @@ function formatCurrencyInput(input) {
 }
 
 function parsePhone(str) {
-  return (str || '').toString().replace(/\D/g, '').slice(0, 11);
+  let digits = (str || '').toString().replace(/\D/g, '');
+
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if ((digits.length === 12 || digits.length === 13) && digits.startsWith('55')) {
+    digits = digits.slice(2);
+  }
+  if (digits.length > 11) digits = digits.slice(-11);
+
+  return digits;
+}
+
+function isValidBrazilPhone(phone) {
+  const digits = parsePhone(phone);
+  return digits.length === 10 || digits.length === 11;
 }
 
 function formatPhoneDigits(digits) {
@@ -768,11 +810,14 @@ function formatPhoneDigits(digits) {
 
   if (len <= 2) return `(${only}`;
 
-  if (len <= 7) {
+  if (len <= 6) {
     return `(${only.slice(0, 2)}) ${only.slice(2)}`;
   }
 
-  // len 8-11
+  if (len <= 10) {
+    return `(${only.slice(0, 2)}) ${only.slice(2, 6)}-${only.slice(6, 10)}`;
+  }
+
   return `(${only.slice(0, 2)}) ${only.slice(2, 7)}-${only.slice(7, 11)}`;
 }
 
@@ -824,12 +869,15 @@ function getSettingsSnapshot() {
   
   // Verify if all fields exist and are properly populated from the form inputs
   const formValues = {};
-  if (els.settingsFields && els.settingsFields.shopName) {
+  const isEditingSettings = els.settingsForm && !els.settingsForm.classList.contains('hidden');
+  if (isEditingSettings && els.settingsFields && els.settingsFields.shopName) {
     formValues.shopName = els.settingsFields.shopName.value?.trim() || saved.shopName || '';
     formValues.shopAddress = els.settingsFields.shopAddress.value?.trim() || saved.shopAddress || '';
     formValues.shopPhone = els.settingsFields.shopPhone.value?.trim() || saved.shopPhone || '';
     formValues.shopInstagram = els.settingsFields.shopInstagram.value?.trim() || saved.shopInstagram || '';
     formValues.shopFacebook = els.settingsFields.shopFacebook.value?.trim() || saved.shopFacebook || '';
+    formValues.orderTerms = els.settingsFields.orderTerms.value?.trim() || saved.orderTerms || '';
+    formValues.orderAccentColor = els.settingsFields.orderAccentColor.value || saved.orderAccentColor || '';
   }
   
   // Merge: prioritize form values if they exist, otherwise use saved
@@ -840,9 +888,15 @@ function getSettingsSnapshot() {
     shopInstagram: formValues.shopInstagram || saved.shopInstagram || '',
     shopFacebook: formValues.shopFacebook || saved.shopFacebook || '',
     shopLogo: saved.shopLogo || '',
+    orderTerms: formValues.orderTerms || saved.orderTerms || '',
+    orderAccentColor: ORDER_ACCENT_COLORS[formValues.orderAccentColor] ? formValues.orderAccentColor : saved.orderAccentColor,
   };
   
   return merged;
+}
+
+function getOrderAccentColor(settings = loadSettings()) {
+  return ORDER_ACCENT_COLORS[settings.orderAccentColor] || ORDER_ACCENT_COLORS[DEFAULT_SETTINGS.orderAccentColor];
 }
 
 function formatDate(dateString) {
@@ -856,10 +910,24 @@ function sanitizePdfText(value) {
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\x20-\x7E]/g, ' ')
+    .trim();
+}
+
+function escapePdfString(value) {
+  return sanitizePdfText(value)
     .replace(/\\/g, '\\\\')
     .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .trim();
+    .replace(/\)/g, '\\)');
+}
+
+function escapeHtml(value) {
+  return (value || '')
+    .toString()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function wrapPdfLine(text, maxLength = 86) {
@@ -898,7 +966,7 @@ function wrapPdfLine(text, maxLength = 86) {
   return lines;
 }
 
-function buildOrderPdfLines(order, title = 'Ordem de Servico') {
+function buildOrderPdfSections(order, title = 'Ordem de Servico') {
   const settings = getSettingsSnapshot();
   const deviceChecklistLabels = getCheckedChecklistLabels(
     DEVICE_CHECKLIST_ITEMS,
@@ -909,98 +977,268 @@ function buildOrderPdfLines(order, title = 'Ordem de Servico') {
     buildChecklistState(ACCESSORY_CHECKLIST_ITEMS, order.accessoryChecklist)
   );
 
-  const lines = [
-    sanitizePdfText(settings.shopName || 'Assistencia Tecnica'),
-    sanitizePdfText(settings.shopAddress || ''),
-    settings.shopPhone ? `Telefone: ${formatPhoneDigits(settings.shopPhone)}` : '',
-    settings.shopInstagram ? `Instagram: ${settings.shopInstagram}` : '',
-    settings.shopFacebook ? `Facebook: ${settings.shopFacebook}` : '',
-    '',
-    sanitizePdfText(title),
-    '',
-    `Cliente: ${order.customerName || '-'}`,
-    `Telefone: ${order.phone ? formatPhoneDigits(order.phone) : '-'}`,
-    `Documento: ${order.customerDocument || '-'}`,
-    `Aparelho: ${order.device || '-'}`,
-    `Defeito: ${order.issue || '-'}`,
-    `Valor: ${formatCurrency(order.price || 0)}`,
-    `Custo: ${formatCurrency(order.cost || 0)}`,
-    `Observacoes: ${order.notes || '-'}`,
-    `Status: ${order.status || '-'}`,
-    `Criada em: ${order.createdAt ? formatDate(order.createdAt) : '-'}`,
-    `Atualizada em: ${order.updatedAt ? formatDate(order.updatedAt) : '-'}`,
-    '',
-    'Assinatura do cliente: ______________________________',
-    `Assinatura da loja: ${sanitizePdfText(settings.shopName || 'Assistencia Tecnica')} __________________`,
+  const sections = [
+    {
+      title: 'Dados do cliente',
+      rows: [
+        ['Cliente', order.customerName || '-'],
+        ['Telefone', order.phone ? formatPhoneDigits(order.phone) : '-'],
+        ['Documento', order.customerDocument || '-'],
+      ],
+    },
+    {
+      title: 'Dados da ordem',
+      rows: [
+        ['Aparelho', order.device || '-'],
+        ['Defeito informado', order.issue || '-'],
+        ['Valor', formatCurrency(order.price || 0)],
+        ['Status', order.status || '-'],
+        ['Criada em', order.createdAt ? formatDate(order.createdAt) : '-'],
+        ['Atualizada em', order.updatedAt ? formatDate(order.updatedAt) : '-'],
+      ],
+    },
+    {
+      title: 'Observacoes',
+      rows: [['Observacoes', order.notes || '-']],
+    },
   ];
 
   if (order.deviceChecklistEnabled) {
-    lines.splice(
-      lines.length - 2,
-      0,
-      '',
-      'Checklist do aparelho:',
-      ...(deviceChecklistLabels.length ? deviceChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado'])
-    );
+    sections.push({
+      title: 'Checklist do aparelho',
+      rows: (deviceChecklistLabels.length ? deviceChecklistLabels : ['Nenhum item marcado']).map((item) => ['Item', item]),
+    });
   }
 
   if (order.accessoryChecklistEnabled) {
-    lines.splice(
-      lines.length - 2,
-      0,
-      '',
-      'Perifericos recebidos:',
-      ...(accessoryChecklistLabels.length ? accessoryChecklistLabels.map((item) => `- ${item}`) : ['- Nenhum item marcado'])
-    );
+    sections.push({
+      title: 'Perifericos recebidos',
+      rows: (accessoryChecklistLabels.length ? accessoryChecklistLabels : ['Nenhum item marcado']).map((item) => ['Item', item]),
+    });
   }
 
-  return lines.flatMap((line) => wrapPdfLine(line));
+  sections.push({
+    title: 'Assinaturas',
+    rows: [
+      ['Assinatura do cliente', order.customerName || 'Cliente'],
+      ['Assinatura da loja', settings.shopName || 'Assistencia Tecnica'],
+    ],
+  });
+  sections.push({
+    title: 'Termos e Condicoes',
+    rows: [['', settings.orderTerms || ORDER_TERMS_TEXT]],
+  });
+
+  return {
+    title,
+    settings,
+    sections,
+  };
 }
 
-function createSimplePdfBlob(lines) {
+function binaryStringToBytes(value) {
+  const bytes = new Uint8Array(value.length);
+  for (let index = 0; index < value.length; index += 1) {
+    bytes[index] = value.charCodeAt(index) & 0xff;
+  }
+  return bytes;
+}
+
+function dataUrlToBinary(dataUrl) {
+  const parts = dataUrl.split(',');
+  if (parts.length < 2) return '';
+  return atob(parts[1]);
+}
+
+function loadImageForPdf(src) {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve(null);
+      return;
+    }
+
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = src;
+  });
+}
+
+async function getPdfLogoData(src) {
+  try {
+    const image = await loadImageForPdf(src);
+    if (!image) return null;
+
+    const maxWidth = 360;
+    const scale = Math.min(1, maxWidth / Math.max(image.naturalWidth || image.width, 1));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+    canvas.height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+    const context = canvas.getContext('2d');
+    if (!context) return null;
+
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+    return {
+      width: canvas.width,
+      height: canvas.height,
+      binary: dataUrlToBinary(dataUrl),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function createStyledOrderPdfBlob({ title, settings, sections }, logoData = null) {
   const pageWidth = 595;
   const pageHeight = 842;
-  const marginLeft = 40;
-  const marginTop = 48;
-  const lineHeight = 14;
-  const maxLinesPerPage = 52;
-  const pages = [];
+  const margin = 34;
+  const accent = getOrderAccentColor(settings);
+  const pages = [[]];
+  let currentPage = 0;
+  let y = pageHeight - 146;
 
-  for (let index = 0; index < lines.length; index += maxLinesPerPage) {
-    pages.push(lines.slice(index, index + maxLinesPerPage));
+  const push = (command) => {
+    pages[currentPage].push(command);
+  };
+
+  const color = (hex) => {
+    const clean = hex.replace('#', '');
+    const r = parseInt(clean.slice(0, 2), 16) / 255;
+    const g = parseInt(clean.slice(2, 4), 16) / 255;
+    const b = parseInt(clean.slice(4, 6), 16) / 255;
+    return `${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)}`;
+  };
+
+  const rect = (x, ry, width, height, fill) => {
+    push(`q ${color(fill)} rg ${x} ${ry} ${width} ${height} re f Q`);
+  };
+
+  const text = (value, x, ty, size = 10, font = 'F1', fill = '#111827') => {
+    push(`q ${color(fill)} rg BT /${font} ${size} Tf ${x} ${ty} Td (${escapePdfString(value)}) Tj ET Q`);
+  };
+
+  const line = (x1, y1, x2, y2, stroke = '#d1d5db', width = 1) => {
+    push(`q ${color(stroke)} RG ${width} w ${x1} ${y1} m ${x2} ${y2} l S Q`);
+  };
+
+  const addPage = () => {
+    currentPage += 1;
+    pages[currentPage] = [];
+    y = pageHeight - 56;
+    text(title, margin, pageHeight - 34, 10, 'F2', '#111827');
+    line(margin, pageHeight - 44, pageWidth - margin, pageHeight - 44);
+  };
+
+  const ensureSpace = (height) => {
+    if (y - height < 42) addPage();
+  };
+
+  const wrapText = (value, maxChars = 74) => wrapPdfLine(value || '-', maxChars);
+
+  rect(0, pageHeight - 104, pageWidth, 104, '#f3f4f6');
+  rect(0, pageHeight - 104, 10, 104, accent.value);
+
+  if (logoData?.binary) {
+    const logoBoxWidth = 96;
+    const logoBoxHeight = 50;
+    const ratio = Math.min(logoBoxWidth / logoData.width, logoBoxHeight / logoData.height);
+    const drawWidth = Math.max(1, Math.round(logoData.width * ratio));
+    const drawHeight = Math.max(1, Math.round(logoData.height * ratio));
+    const logoX = margin;
+    const logoY = pageHeight - 82;
+    rect(logoX - 6, logoY - 8, logoBoxWidth + 12, logoBoxHeight + 16, '#ffffff');
+    push(`q ${drawWidth} 0 0 ${drawHeight} ${logoX + (logoBoxWidth - drawWidth) / 2} ${logoY + (logoBoxHeight - drawHeight) / 2} cm /Im1 Do Q`);
   }
 
-  if (!pages.length) pages.push(['']);
+  const infoX = logoData?.binary ? 158 : margin;
+  text(settings.shopName || 'Assistencia Tecnica', infoX, pageHeight - 34, 15, 'F2', '#111827');
+  [
+    settings.shopAddress,
+    settings.shopPhone ? `Telefone: ${formatPhoneDigits(settings.shopPhone)}` : '',
+    settings.shopInstagram ? `Instagram: ${settings.shopInstagram}` : '',
+    settings.shopFacebook ? `Facebook: ${settings.shopFacebook}` : '',
+  ]
+    .filter(Boolean)
+    .slice(0, 4)
+    .forEach((shopLine, index) => text(shopLine, infoX, pageHeight - 51 - index * 11, 8, 'F1', '#374151'));
 
-  const fontObjectNumber = 3;
+  text(title, margin, pageHeight - 126, 14, 'F2', '#111827');
+  text(`Emitido em ${formatDate(new Date().toISOString())}`, pageWidth - 178, pageHeight - 124, 8, 'F1', '#6b7280');
+
+  sections.forEach((section) => {
+    ensureSpace(section.title === 'Assinaturas' ? 118 : section.title === 'Termos e Condicoes' ? 72 : 40);
+    text(section.title, margin, y, section.title === 'Termos e Condicoes' ? 8 : 10, 'F2', accent.value);
+    y -= 12;
+    line(margin, y, pageWidth - margin, y, accent.light, 0.6);
+    y -= section.title === 'Assinaturas' ? 16 : section.title === 'Termos e Condicoes' ? 8 : 10;
+
+    section.rows.forEach(([label, value]) => {
+      const valueLines = wrapText(value, 78);
+      const rowHeight = Math.max(19, valueLines.length * 10 + 7);
+      ensureSpace(rowHeight + 2);
+
+      if (section.title === 'Assinaturas') {
+        ensureSpace(50);
+        text(label, margin, y, 8, 'F2', '#374151');
+        y -= 22;
+        line(margin, y, pageWidth - margin, y, '#111827', 0.8);
+        text(value, margin, y - 11, 7, 'F1', '#6b7280');
+        y -= 30;
+        return;
+      }
+
+      if (section.title === 'Termos e Condicoes') {
+        const termLines = wrapText(value, 96);
+        termLines.forEach((valueLine, index) => {
+          text(valueLine, margin, y - index * 8, 7, 'F1', '#4b5563');
+        });
+        y -= termLines.length * 8 + 4;
+        return;
+      }
+
+      text(label, margin, y, 7, 'F2', '#6b7280');
+      valueLines.forEach((valueLine, index) => {
+        text(valueLine, 142, y - index * 10, 9, 'F1', '#111827');
+      });
+      y -= rowHeight;
+    });
+
+    y -= 6;
+  });
+
+  pages.forEach((commands, index) => {
+    commands.push(
+      `q ${color('#6b7280')} rg BT /F1 8 Tf ${pageWidth - 106} 28 Td (Pagina ${index + 1} de ${pages.length}) Tj ET Q`
+    );
+  });
+
+  const fontRegularObjectNumber = 3;
+  const fontBoldObjectNumber = 4;
+  const imageObjectNumber = logoData?.binary ? 5 : null;
+  const firstPageObjectNumber = logoData?.binary ? 6 : 5;
   const objects = [];
   const pageRefs = [];
 
-  pages.forEach((pageLines, pageIndex) => {
-    const pageObjectNumber = 4 + pageIndex * 2;
+  pages.forEach((pageCommands, pageIndex) => {
+    const pageObjectNumber = firstPageObjectNumber + pageIndex * 2;
     const contentObjectNumber = pageObjectNumber + 1;
     pageRefs.push(`${pageObjectNumber} 0 R`);
-
-    const contentLines = [
-      'BT',
-      '/F1 11 Tf',
-      `${marginLeft} ${pageHeight - marginTop} Td`,
-    ];
-
-    pageLines.forEach((line, lineIndex) => {
-      const safeText = sanitizePdfText(line);
-      contentLines.push(`(${safeText}) Tj`);
-      if (lineIndex < pageLines.length - 1) {
-        contentLines.push(`0 -${lineHeight} Td`);
-      }
-    });
-
-    contentLines.push('ET');
-    const stream = `${contentLines.join('\n')}\n`;
+    const resources = [
+      `/Font << /F1 ${fontRegularObjectNumber} 0 R /F2 ${fontBoldObjectNumber} 0 R >>`,
+      logoData?.binary ? `/XObject << /Im1 ${imageObjectNumber} 0 R >>` : '',
+      '/ProcSet [/PDF /Text /ImageC]',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const stream = `${pageCommands.join('\n')}\n`;
 
     objects.push({
       number: pageObjectNumber,
-      body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 ${fontObjectNumber} 0 R >> >> /Contents ${contentObjectNumber} 0 R >>`,
+      body: `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << ${resources} >> /Contents ${contentObjectNumber} 0 R >>`,
     });
     objects.push({
       number: contentObjectNumber,
@@ -1012,6 +1250,15 @@ function createSimplePdfBlob(lines) {
     { number: 1, body: '<< /Type /Catalog /Pages 2 0 R >>' },
     { number: 2, body: `<< /Type /Pages /Kids [${pageRefs.join(' ')}] /Count ${pages.length} >>` },
     { number: 3, body: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>' },
+    { number: 4, body: '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>' },
+    ...(logoData?.binary
+      ? [
+          {
+            number: imageObjectNumber,
+            body: `<< /Type /XObject /Subtype /Image /Width ${logoData.width} /Height ${logoData.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoData.binary.length} >>\nstream\n${logoData.binary}\nendstream`,
+          },
+        ]
+      : []),
     ...objects.sort((a, b) => a.number - b.number),
   ];
 
@@ -1033,12 +1280,14 @@ function createSimplePdfBlob(lines) {
 
   pdf += `trailer\n<< /Size ${pdfObjects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
 
-  return new Blob([pdf], { type: 'application/pdf' });
+  return new Blob([binaryStringToBytes(pdf)], { type: 'application/pdf' });
 }
 
-function createOrderPdfFile(order, title = 'Ordem de Servico') {
-  const lines = buildOrderPdfLines(order, title);
-  const blob = createSimplePdfBlob(lines);
+async function createOrderPdfFile(order, title = 'Ordem de Servico') {
+  const pdfData = buildOrderPdfSections(order, title);
+  const logoSrc = pdfData.settings.shopLogo || DEFAULT_LOGO;
+  const logoData = await getPdfLogoData(logoSrc);
+  const blob = createStyledOrderPdfBlob(pdfData, logoData);
   const safeName = sanitizePdfText(order.customerName || 'cliente')
     .replace(/\s+/g, '-')
     .replace(/[^a-zA-Z0-9-_]/g, '')
@@ -1049,8 +1298,8 @@ function createOrderPdfFile(order, title = 'Ordem de Servico') {
 
 function getWhatsAppNumber(phone) {
   const phoneNumber = parsePhone(phone);
-  if (!phoneNumber) return '';
-  return phoneNumber.startsWith('55') ? phoneNumber : `55${phoneNumber}`;
+  if (!isValidBrazilPhone(phoneNumber)) return '';
+  return `55${phoneNumber}`;
 }
 
 function getWhatsAppMessage(order) {
@@ -1071,7 +1320,7 @@ function downloadFile(file) {
 }
 
 async function sendOrderPdfViaWhatsApp(order, title = 'Ordem de Servico') {
-  const pdfFile = createOrderPdfFile(order, title);
+  const pdfFile = await createOrderPdfFile(order, title);
   const phoneNumber = getWhatsAppNumber(order.phone);
   const message = getWhatsAppMessage(order);
 
@@ -1136,7 +1385,7 @@ function choosePrintLayout() {
   });
 }
 
-function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures }) {
+function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures, termsBlock, accentColor }) {
   const copyContent = (copyType) => `
       <div class="copy-container">
         <div class="copy-type">${copyType}</div>
@@ -1145,6 +1394,7 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
         ${rows}
         ${printChecklistSection}
         ${signatures}
+        ${termsBlock}
       </div>`;
 
   return `
@@ -1182,7 +1432,7 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
           border-bottom: 2px dashed #ccc;
           padding-bottom: 4px;
         }
-        h1 { margin: 8px 0 6px; font-size: 18px; }
+        h1 { margin: 8px 0 6px; font-size: 18px; color: ${accentColor.value}; }
         .shop {
           text-align: left;
           margin-bottom: 8px;
@@ -1211,7 +1461,7 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
           margin-top: 12px;
         }
         .print-checklist {
-          border: 1px solid #ddd;
+          border: 1px solid ${accentColor.light};
           border-radius: 10px;
           padding: 10px;
         }
@@ -1219,6 +1469,7 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
           display: block;
           margin-bottom: 6px;
           font-size: 12px;
+          color: ${accentColor.value};
         }
         .print-checklist ul {
           list-style: none;
@@ -1262,6 +1513,24 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
           text-transform: uppercase;
           letter-spacing: 0.3px;
         }
+        .terms {
+          margin-top: 12px;
+          padding-top: 8px;
+          border-top: 1px solid #ddd;
+          color: #333;
+        }
+        .terms strong {
+          display: block;
+          margin-bottom: 4px;
+          font-size: 9px;
+          text-transform: uppercase;
+        }
+        .terms p {
+          font-size: 8px;
+          line-height: 1.35;
+          text-align: justify;
+          white-space: pre-line;
+        }
         @media (max-width: 700px) {
           .print-page {
             grid-template-columns: 1fr;
@@ -1282,7 +1551,7 @@ function buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signa
   `;
 }
 
-function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures }) {
+function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures, termsBlock, accentColor }) {
   return `
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -1332,6 +1601,7 @@ function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, si
           font-weight: 700;
           margin-bottom: 10px;
           text-transform: uppercase;
+          color: ${accentColor.value};
         }
         .rows {
           display: grid;
@@ -1413,6 +1683,23 @@ function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, si
           text-align: center;
           font-size: 10px;
         }
+        .terms {
+          margin-top: 10px;
+          padding-top: 8px;
+          border-top: 1px dashed #444;
+        }
+        .terms strong {
+          display: block;
+          margin-bottom: 4px;
+          font-size: 9px;
+          text-transform: uppercase;
+        }
+        .terms p {
+          font-size: 8px;
+          line-height: 1.35;
+          text-align: left;
+          white-space: pre-line;
+        }
       </style>
     </head>
     <body>
@@ -1426,6 +1713,7 @@ function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, si
         </div>
         ${printChecklistSection}
         ${signatures}
+        ${termsBlock}
         <div class="ticket-footer">Comprovante de OS</div>
       </div>
     </body>
@@ -1435,6 +1723,7 @@ function buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, si
 
 function buildPrintIframe(order, title = 'Ordem de Serviço', layout = 'a4') {
   const settings = getSettingsSnapshot();
+  const accentColor = getOrderAccentColor(settings);
   const logoSrc = settings.shopLogo || DEFAULT_LOGO;
   const logoHtml = `<img src="${logoSrc}" alt="Logo">`;
   const shopBlock = [
@@ -1504,9 +1793,14 @@ function buildPrintIframe(order, title = 'Ordem de Serviço', layout = 'a4') {
           <div class="signature-label">${settings.shopName || 'Assistência Técnica'}</div>
         </div>
       </div>`;
+  const termsBlock = `
+      <div class="terms">
+        <strong>Termos e Condições</strong>
+        <p>${escapeHtml(settings.orderTerms || ORDER_TERMS_TEXT)}</p>
+      </div>`;
   return layout === 'cupom'
-    ? buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures })
-    : buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures });
+    ? buildCupomPrintHtml({ title, shopBlock, rows, printChecklistSection, signatures, termsBlock, accentColor })
+    : buildA4PrintHtml({ title, shopBlock, rows, printChecklistSection, signatures, termsBlock, accentColor });
 }
 
 async function handleOrderPrint(order, title = 'Ordem de Serviço') {
@@ -1837,13 +2131,13 @@ async function handleDetailAction(id, dataset) {
   if (dataset.action === 'print') {
     const order = loadOrders().find((o) => o.id === id);
     if (order) {
-      await handleOrderPrint(order, 'Detalhes da OS');
+      await handleOrderPrint(order, 'Ordem de Serviço');
     }
   }
   if (dataset.action === 'share-pdf') {
     const order = loadOrders().find((o) => o.id === id);
     if (order) {
-      await sendOrderPdfViaWhatsApp(order, 'Detalhes da OS');
+      await sendOrderPdfViaWhatsApp(order, 'Ordem de Serviço');
     }
   }
   if (dataset.action === 'whatsapp') {
@@ -1870,9 +2164,9 @@ function handleWhatsAppContact(order) {
   }
 
   // Limpar número para o padrão internacional
-  const phoneNumber = parsePhone(order.phone);
+  const whatsappNumber = getWhatsAppNumber(order.phone);
   
-  if (!phoneNumber) {
+  if (!whatsappNumber) {
     alertModal('Número de telefone inválido');
     return;
   }
@@ -1886,9 +2180,6 @@ function handleWhatsAppContact(order) {
 
   // Codificar mensagem para URL
   const encodedMessage = encodeURIComponent(message);
-  
-  // Número com código +55 (Brasil)
-  const whatsappNumber = phoneNumber.startsWith('55') ? phoneNumber : '55' + phoneNumber;
   
   // Link do WhatsApp
   const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
@@ -1908,7 +2199,7 @@ function handlePhoneCall(phone) {
 
   const phoneNumber = parsePhone(phone);
   
-  if (!phoneNumber) {
+  if (!isValidBrazilPhone(phoneNumber)) {
     alertModal('Número de telefone inválido');
     return;
   }
@@ -2073,6 +2364,10 @@ function renderSettings() {
   els.profileElements.phone.textContent = settings.shopPhone ? formatPhoneDigits(settings.shopPhone) : '-';
   els.profileElements.instagram.textContent = settings.shopInstagram || '-';
   els.profileElements.facebook.textContent = settings.shopFacebook || '-';
+  els.profileElements.orderTerms.textContent = settings.orderTerms || ORDER_TERMS_TEXT;
+  const accentColor = getOrderAccentColor(settings);
+  els.profileElements.accentLabel.textContent = accentColor.label;
+  els.profileElements.accentSwatch.style.backgroundColor = accentColor.value;
 
   closeSettingsModal();
 }
@@ -2085,6 +2380,14 @@ function enableSettingsEdit() {
       return;
     }
     const val = settings[key] || '';
+    if (key === 'orderTerms') {
+      input.value = val || ORDER_TERMS_TEXT;
+      return;
+    }
+    if (key === 'orderAccentColor') {
+      input.value = ORDER_ACCENT_COLORS[val] ? val : DEFAULT_SETTINGS.orderAccentColor;
+      return;
+    }
     input.value = key === 'shopPhone' ? formatPhoneDigits(parsePhone(val)) : val;
   });
   els.settingsForm.classList.remove('hidden');
@@ -2118,6 +2421,10 @@ async function handleSettingsSave(event) {
     shopPhone: parsePhone(els.settingsFields.shopPhone.value),
     shopInstagram: els.settingsFields.shopInstagram.value.trim(),
     shopFacebook: els.settingsFields.shopFacebook.value.trim(),
+    orderTerms: els.settingsFields.orderTerms.value.trim(),
+    orderAccentColor: ORDER_ACCENT_COLORS[els.settingsFields.orderAccentColor.value]
+      ? els.settingsFields.orderAccentColor.value
+      : DEFAULT_SETTINGS.orderAccentColor,
     shopLogo,
   };
   saveSettings(data);
